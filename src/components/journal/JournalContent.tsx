@@ -1,0 +1,207 @@
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Toaster } from '@/components/ui/sonner'
+import { useTrades, type Trade, type TradeFilters, type TradesPage } from '@/hooks/useTrades'
+import { useAccountContext } from '@/contexts/AccountContext'
+import { TradeTable } from './TradeTable'
+import { TradeFilters as TradeFiltersBar } from './TradeFilters'
+import { TradeFormSheet } from './TradeFormSheet'
+import { TradeDetailSheet } from './TradeDetailSheet'
+import { TradeDeleteDialog } from './TradeDeleteDialog'
+
+function paramsToFilters(params: URLSearchParams): TradeFilters {
+  const filters: TradeFilters = {}
+  const q = params.get('q'); if (q) filters.search = q
+  const from = params.get('from'); if (from) filters.dateFrom = from
+  const to = params.get('to'); if (to) filters.dateTo = to
+  const dir = params.get('dir'); if (dir) filters.direction = dir as TradeFilters['direction']
+  const outcome = params.get('outcome'); if (outcome) filters.outcome = outcome as TradeFilters['outcome']
+  const setup = params.get('setup'); if (setup) filters.setupType = setup
+  const strategy = params.get('strategy'); if (strategy) filters.strategy = strategy
+  const emotion = params.get('emotion'); if (emotion) filters.emotion = emotion
+  const assets = params.get('assets'); if (assets) filters.assets = assets.split(',')
+  return filters
+}
+
+function filtersToParams(filters: TradeFilters, page: number): URLSearchParams {
+  const p = new URLSearchParams()
+  if (filters.search) p.set('q', filters.search)
+  if (filters.dateFrom) p.set('from', filters.dateFrom)
+  if (filters.dateTo) p.set('to', filters.dateTo)
+  if (filters.direction) p.set('dir', filters.direction)
+  if (filters.outcome) p.set('outcome', filters.outcome)
+  if (filters.setupType) p.set('setup', filters.setupType)
+  if (filters.strategy) p.set('strategy', filters.strategy)
+  if (filters.emotion) p.set('emotion', filters.emotion)
+  if (filters.assets?.length) p.set('assets', filters.assets.join(','))
+  if (page > 1) p.set('page', String(page))
+  return p
+}
+
+export function JournalContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const { activeAccount } = useAccountContext()
+  const { fetchTrades, deleteTrade, getUniqueValues, isMutating } = useTrades()
+
+  const [tradesPage, setTradesPage] = useState<TradesPage | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null)
+  const [detailTrade, setDetailTrade] = useState<Trade | null>(null)
+  const [deletingTrade, setDeletingTrade] = useState<Trade | null>(null)
+
+  const [assetSuggestions, setAssetSuggestions] = useState<string[]>([])
+  const [setupSuggestions, setSetupSuggestions] = useState<string[]>([])
+  const [strategySuggestions, setStrategySuggestions] = useState<string[]>([])
+
+  const currentPage = Number(searchParams.get('page') ?? '1')
+  const filters = paramsToFilters(searchParams)
+
+  // Load unique values for suggestions (once per account)
+  useEffect(() => {
+    if (!activeAccount) return
+    Promise.all([
+      getUniqueValues('asset'),
+      getUniqueValues('setup_type'),
+      getUniqueValues('strategy'),
+    ]).then(([assets, setups, strategies]) => {
+      setAssetSuggestions(assets)
+      setSetupSuggestions(setups)
+      setStrategySuggestions(strategies)
+    })
+  }, [activeAccount?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch trades when URL params or account changes
+  useEffect(() => {
+    if (!activeAccount) return
+    setIsLoading(true)
+    fetchTrades(filters, currentPage)
+      .then(setTradesPage)
+      .finally(() => setIsLoading(false))
+  }, [searchParams.toString(), activeAccount?.id, refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleFiltersChange = useCallback((newFilters: TradeFilters) => {
+    const params = filtersToParams(newFilters, 1)
+    router.replace(`${pathname}?${params.toString()}`)
+  }, [pathname, router])
+
+  const handlePageChange = useCallback((page: number) => {
+    const params = filtersToParams(filters, page)
+    router.replace(`${pathname}?${params.toString()}`)
+  }, [pathname, router, filters])
+
+  const handleNewTrade = () => {
+    setEditingTrade(null)
+    setIsFormOpen(true)
+  }
+
+  const handleEditTrade = (trade: Trade) => {
+    setDetailTrade(null)
+    setEditingTrade(trade)
+    setIsFormOpen(true)
+  }
+
+  const handleDeleteClick = (trade: Trade) => {
+    setDetailTrade(null)
+    setDeletingTrade(trade)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingTrade) return
+    const { error } = await deleteTrade(deletingTrade.id)
+    if (!error) {
+      setDeletingTrade(null)
+      setRefreshKey(k => k + 1)
+    }
+  }
+
+  const handleFormSuccess = () => {
+    setRefreshKey(k => k + 1)
+    // Refresh suggestions after new trade
+    if (activeAccount) {
+      Promise.all([
+        getUniqueValues('asset'),
+        getUniqueValues('setup_type'),
+        getUniqueValues('strategy'),
+      ]).then(([assets, setups, strategies]) => {
+        setAssetSuggestions(assets)
+        setSetupSuggestions(setups)
+        setStrategySuggestions(strategies)
+      })
+    }
+  }
+
+  return (
+    <>
+      <Toaster />
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Journal</h1>
+            <p className="text-muted-foreground text-sm">
+              {activeAccount ? `Konto: ${activeAccount.name}` : 'Kein aktives Konto'}
+            </p>
+          </div>
+          <Button onClick={handleNewTrade} disabled={!activeAccount} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Neuer Trade
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <TradeFiltersBar
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          assetOptions={assetSuggestions}
+          setupOptions={setupSuggestions}
+          strategyOptions={strategySuggestions}
+        />
+
+        {/* Table */}
+        <TradeTable
+          tradesPage={tradesPage}
+          isLoading={isLoading}
+          onRowClick={setDetailTrade}
+          onPageChange={handlePageChange}
+        />
+      </div>
+
+      {/* Form Sheet */}
+      <TradeFormSheet
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        editingTrade={editingTrade}
+        assetSuggestions={assetSuggestions}
+        setupSuggestions={setupSuggestions}
+        strategySuggestions={strategySuggestions}
+        onSuccess={handleFormSuccess}
+      />
+
+      {/* Detail Sheet */}
+      <TradeDetailSheet
+        trade={detailTrade}
+        open={!!detailTrade}
+        onOpenChange={open => { if (!open) setDetailTrade(null) }}
+        onEdit={handleEditTrade}
+        onDelete={handleDeleteClick}
+      />
+
+      {/* Delete Dialog */}
+      <TradeDeleteDialog
+        open={!!deletingTrade}
+        onOpenChange={open => { if (!open) setDeletingTrade(null) }}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={isMutating}
+      />
+    </>
+  )
+}
