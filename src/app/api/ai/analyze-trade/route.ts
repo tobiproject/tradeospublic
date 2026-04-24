@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getAnthropicClient } from '@/lib/anthropic'
@@ -176,8 +176,8 @@ export async function POST(req: NextRequest) {
     analysisId = inserted.id
   }
 
-  // Fire analysis in background (non-blocking)
-  runAnalysis(trade_id, account_id, user.id, analysisId).catch(console.error)
+  // Use after() to keep function alive until analysis completes
+  after(() => runAnalysis(trade_id, account_id, user.id, analysisId).catch(console.error))
 
   return NextResponse.json({ id: analysisId, status: 'pending' })
 }

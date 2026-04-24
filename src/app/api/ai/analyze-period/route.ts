@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getAnthropicClient } from '@/lib/anthropic'
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
     analysisId = inserted.id
   }
 
-  runPeriodAnalysis(account_id, user.id, type, period_start, period_end, analysisId).catch(console.error)
+  after(() => runPeriodAnalysis(account_id, user.id, type, period_start, period_end, analysisId).catch(console.error))
 
   return NextResponse.json({ id: analysisId, status: 'pending' })
 }
