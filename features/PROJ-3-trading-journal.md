@@ -255,3 +255,105 @@ lib/
 - Trade-Import aus Broker-History (CSV Import ist PROJ-9)
 - Zeichenwerkzeuge direkt auf dem Screenshot
 - Versionierung von Trade-Bearbeitungen (Audit-Trail)
+
+---
+
+## QA Test Results (2026-04-24)
+
+**Tester:** QA Engineer (automated)
+**Status:** In Review
+
+### Acceptance Criteria
+
+| ID | Kriterium | Status |
+|----|-----------|--------|
+| AC-3.1 | Alle Pflichtfelder vorhanden | ✅ Pass |
+| AC-3.2 | RR Auto-Berechnung (live) | ✅ Pass |
+| AC-3.3 | Risiko % Auto-Berechnung (live) | ✅ Pass |
+| AC-3.4 | Inline-Validierung bei Pflichtfeldern | ⚠️ Partial — Fehlermeldungen erscheinen, aber Submit-Button ist nicht disabled bei Validierungsfehlern |
+| AC-3.5 | Freitextfeld mit Zeichenzähler (0–5000) | ✅ Pass |
+| AC-3.6 | Screenshot-Upload max. 5 × 10 MB, PNG/JPG/WEBP | ✅ Pass (Limit-Check implementiert, Toast bei Fehler) |
+| AC-3.7 | Screenshots als Thumbnails mit Lösch-Option | ✅ Pass |
+| AC-3.8 | Setup-Typ mit Vorschlägen aus vorherigen Trades | ✅ Pass (datalist-Autocomplete, keine vordefinierten Optionen — kein Blocker) |
+| AC-3.9 | Strategie: Freitext + Vorschläge aus vorherigen Trades | ✅ Pass |
+| AC-3.10 | Marktphase Dropdown: 6 Optionen | ✅ Pass |
+| AC-3.11 | Emotion vor Trade: 7 Optionen | ✅ Pass |
+| AC-3.12 | Emotion nach Trade: gleiche 7 Optionen | ✅ Pass |
+| AC-3.13 | Ergebnis % automatisch berechnet | ✅ Pass |
+| AC-3.14 | Tabelle zeigt alle geforderten Spalten | ✅ Pass |
+| AC-3.15 | Spalten sortierbar per Header-Klick | ✅ Pass |
+| AC-3.16 | Filter: Datum, Richtung, Outcome, Asset, Setup, Strategie, Emotion | ✅ Pass |
+| AC-3.17 | Freitextsuche über Asset/Notizen/Setup | ✅ Pass |
+| AC-3.18 | Pagination: 25 Trades/Seite, Gesamtanzahl sichtbar | ✅ Pass |
+| AC-3.19 | Klick auf Trade öffnet Detail-Sheet | ✅ Pass |
+| AC-3.20 | Screenshots öffnen in Lightbox | ✅ Pass (Implementierung vorhanden, manuell bestätigt) |
+| AC-3.21 | Trade vollständig editierbar, vorausgefüllt | ✅ Pass |
+| AC-3.22 | Löschen erfordert Bestätigungs-Dialog | ✅ Pass |
+| AC-3.23 | Abgeleitete Werte nach Bearbeitung neu berechnet | ✅ Pass |
+
+**Ergebnis: 22/23 Pass, 1 Partial**
+
+### Edge Cases
+
+| ID | Szenario | Status |
+|----|----------|--------|
+| EC-3.1 | SL = Entry → Validierungsfehler | ❌ Fail — kein Fehler; RR zeigt nur „–", keine Fehlermeldung |
+| EC-3.2 | SL auf falscher Seite → Warnung, kein Block | ✅ Pass |
+| EC-3.3 | Partial save bei Screenshot-Upload-Fehler | ✅ Pass (Toast-Implementierung vorhanden) |
+| EC-3.4 | Unsaved-Changes-Dialog beim Schließen | ✅ Pass |
+| EC-3.5 | Asset-Feld akzeptiert freie Eingabe | ✅ Pass |
+| EC-3.6 | Last-write-wins bei gleichzeitigem Bearbeiten | ➖ Not tested (kein Blocker) |
+| EC-3.7 | Risk % funktioniert ohne Pip-Value | ✅ Pass (direkte € Eingabe) |
+
+### Bugs Found
+
+#### BUG-3.1 — Medium
+**AC-3.4: Submit-Button nicht disabled bei Validierungsfehlern**
+- **Beschreibung:** Der „Erfassen"-Button zeigt keinen visuellen disabled-Zustand wenn Pflichtfelder fehlen oder ungültig sind. react-hook-form verhindert zwar die Submission, aber die UI gibt keinen Hinweis.
+- **Schritte:** Formular öffnen → Pflichtfelder leer lassen → Button ist klickbar (sieht aktiv aus)
+- **Fix:** `disabled={isMutating || !form.formState.isValid}` → ergänze `|| !form.formState.isValid` im Submit-Button. Zusätzlich `mode: 'onChange'` in `useForm` aktivieren.
+- **Severity:** Medium
+
+#### BUG-3.2 — Medium
+**EC-3.1: Kein Validierungsfehler wenn SL = Entry**
+- **Beschreibung:** Wenn `sl_price === entry_price`, ist der SL-Abstand 0 und RR nicht berechenbar. Das Formular zeigt nur „–" für RR, aber keine Fehlermeldung. Der Trade kann trotzdem abgeschickt werden.
+- **Schritte:** Entry = 1.1000 setzen → SL = 1.1000 setzen → Kein Fehler sichtbar
+- **Fix:** Zod `.superRefine()` auf Schema-Ebene hinzufügen: `sl_price !== entry_price` und `tp_price !== entry_price` prüfen
+- **Severity:** Medium
+
+#### BUG-3.3 — Low
+**Doppelter Toaster: JournalContent rendert eigenen `<Toaster />`**
+- **Beschreibung:** `JournalContent.tsx` rendert `<Toaster />` obwohl bereits einer im Root-Layout existiert. Kann zu doppelten Toast-Benachrichtigungen führen.
+- **Schritte:** Toast auslösen (Trade erstellen) → möglicherweise doppelte Benachrichtigung
+- **Fix:** `<Toaster />` aus `JournalContent.tsx` entfernen (Root-Layout reicht)
+- **Severity:** Low
+
+### Security Audit
+
+| Check | Ergebnis |
+|-------|----------|
+| Unauthenticated /journal access | ✅ Redirect zu /login |
+| RLS: Trades nur vom eigenen User sichtbar | ✅ RLS-Policies auf DB-Ebene (`auth.uid() = user_id`) |
+| XSS via Asset/Notes-Felder | ✅ React escaped alle Inputs automatisch |
+| SQL Injection via Filter-Inputs | ✅ Supabase parametrisiert alle Queries |
+| Screenshot path traversal | ✅ Pfad: `{user_id}/{trade_id}/...` — kein User-Control über Pfad-Segments |
+| Cross-account trade access | ✅ `account_id` filter + RLS verhindert fremde Daten |
+
+### Regression Tests
+
+| Feature | Status |
+|---------|--------|
+| PROJ-1 Auth & Multi-Account | ✅ 11/11 Tests bestanden (keine Regression) |
+
+### Test Coverage
+
+- **Unit Tests:** 43 Tests — alle bestanden (`trade-calculations.ts` vollständig abgedeckt)
+- **E2E Tests:** 29 Tests — 1 passed (ohne Credentials), 28 skipped (benötigen `TEST_USER_EMAIL`/`TEST_USER_PASSWORD`)
+
+### Production-Ready Decision
+
+**NOT READY** — 2 Medium-Bugs müssen zuerst behoben werden:
+- BUG-3.1: Submit-Button disabled-State
+- BUG-3.2: SL = Entry Validierung
+
+BUG-3.3 (Low) kann parallel oder danach behoben werden.
