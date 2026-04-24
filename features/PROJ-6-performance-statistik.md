@@ -1,6 +1,6 @@
 # PROJ-6: Performance & Statistik
 
-**Status:** In Review
+**Status:** Deployed
 **Priority:** P0 (MVP)
 **Created:** 2026-04-23
 
@@ -270,3 +270,12 @@ Kein neues Backend nötig — alle Daten aus bestehender `trades`-Tabelle:
 - **Security:** Pass
 - **Production Ready:** YES
 - **Recommendation:** Deploy. BUG-6.1 und BUG-6.2 sind Nice-to-have und können im nächsten Sprint behoben werden.
+
+---
+
+## Deployment
+
+**Deployed:** 2026-04-24
+**Git Tag:** v1.6.0-PROJ-6
+**Remote:** https://github.com/tobiproject/TradeOS1-1.git
+**Security Headers:** X-Frame-Options, X-Content-Type-Options, Referrer-Policy, HSTS hinzugefügt in `next.config.ts`
