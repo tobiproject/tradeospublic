@@ -1,6 +1,6 @@
 # PROJ-4: KI-Analyse Engine
 
-**Status:** In Review
+**Status:** Deployed
 **Priority:** P1
 **Created:** 2026-04-23
 
@@ -372,3 +372,12 @@ Folgende zuvor approvte Features wurden nach PROJ-4 Implementierung geprüft:
 3. AC-4.9–4.11 (Muster-Erkennung) als Out of Scope dokumentiert, kein Blocking-Issue.
 
 **Empfehlung: APPROVED für Deployment wenn ANTHROPIC_API_KEY in Produktion gesetzt.**
+
+---
+
+## Deployment
+
+**Deployed:** 2026-04-24
+**Production URL:** https://tradeospublic.vercel.app
+**Repository:** https://github.com/tobiproject/tradeospublic
+**Vercel Project:** tradeospublic
