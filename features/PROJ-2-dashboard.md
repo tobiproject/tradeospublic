@@ -1,6 +1,6 @@
 # PROJ-2: Dashboard (Zentrale Übersicht)
 
-**Status:** Architected
+**Status:** In Progress
 **Priority:** P0 (MVP)
 **Created:** 2026-04-23
 
