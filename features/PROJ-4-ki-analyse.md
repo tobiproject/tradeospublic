@@ -245,8 +245,21 @@ AppNav
 ### Umgebungsvariablen
 `ANTHROPIC_API_KEY` muss in `.env.local` gesetzt werden (von console.anthropic.com)
 
-### Noch offen (Frontend)
-- KI-Analyse Tab in TradeDetailSheet
-- `/analysen` Seite mit InsightsFeed, Tabs, TradingRulesEditor
-- Dashboard InsightsPreview
-- AppNav "Analysen" Link
+## Frontend Implementation Notes
+
+**Implementiert (2026-04-24):**
+
+### Neue Dateien
+- `src/components/ai/TradeAnalysisTab.tsx` — KI-Analyse Tab: Score (1–10 mit Farbbalken), Fehler/Stärken/Verbesserungen, Zusammenfassung, Neu-analysieren Button, Polling bis completed
+- `src/components/ai/TradingRulesEditor.tsx` — CRUD für Trading-Regeln: hinzufügen, aktivieren/deaktivieren (Switch), löschen
+- `src/components/ai/PeriodAnalysisCard.tsx` — Wochen-/Monatsanalyse-Karte: P&L, Trades, Winrate, Top-Fehler, Stärken, Fokus, Vormonatsvergleich-Delta
+- `src/components/ai/AnalysenContent.tsx` — /analysen Seite: Tabs Woche/Monat, Trigger-Buttons, Analyse-Liste, TradingRulesEditor
+- `src/components/ai/InsightsPreview.tsx` — Dashboard-Karte: letzte 2 Analysen als Vorschau, Link → /analysen
+- `src/app/(app)/analysen/page.tsx` — Neue Seite mit force-dynamic
+
+### Geänderte Dateien
+- `TradeDetailSheet.tsx` — Neuer "KI-Analyse" Tab (3. Tab), lädt lazy wenn aktiv
+- `AppNav.tsx` — "Analysen" Link zwischen Performance und Risk
+- `DashboardContent.tsx` — InsightsPreview am Ende
+- `JournalContent.tsx` — Auto-Trigger Analyse nach Trade-Speichern (AC-4.1)
+- `TradeFormSheet.tsx` — `onSuccess(newTradeId?)` gibt ID des neuen Trades zurück

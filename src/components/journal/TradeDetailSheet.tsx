@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RRSimulator } from '@/components/risk/RRSimulator'
+import { TradeAnalysisTab } from '@/components/ai/TradeAnalysisTab'
 import type { Trade } from '@/hooks/useTrades'
 
 const EMOTION_LABELS: Record<string, string> = {
@@ -53,6 +54,7 @@ interface Props {
 
 export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }: Props) {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('detail')
 
   if (!trade) return null
 
@@ -93,9 +95,10 @@ export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }
             </p>
           </SheetHeader>
 
-          <Tabs defaultValue="detail" className="flex-1 flex flex-col min-h-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <TabsList className="mx-6 mt-4 mb-0 w-auto self-start">
               <TabsTrigger value="detail">Details</TabsTrigger>
+              <TabsTrigger value="ki">KI-Analyse</TabsTrigger>
               <TabsTrigger value="simulator">RR-Simulator</TabsTrigger>
             </TabsList>
 
@@ -212,6 +215,14 @@ export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }
                 </div>
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="ki" className="flex-1 overflow-y-auto px-6 py-4 mt-0">
+            <TradeAnalysisTab
+              tradeId={trade.id}
+              accountId={trade.account_id}
+              isActive={activeTab === 'ki'}
+            />
           </TabsContent>
 
           <TabsContent value="simulator" className="flex-1 overflow-y-auto px-6 py-4 mt-0">

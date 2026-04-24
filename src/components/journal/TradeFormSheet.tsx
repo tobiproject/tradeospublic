@@ -296,7 +296,7 @@ interface Props {
   assetSuggestions: string[]
   setupSuggestions: string[]
   strategySuggestions: string[]
-  onSuccess: () => void
+  onSuccess: (newTradeId?: string) => void
 }
 
 export function TradeFormSheet({
@@ -463,6 +463,9 @@ export function TradeFormSheet({
       }
 
       toast.success('Trade erfasst')
+      onOpenChange(false)
+      onSuccess(trade.id)
+      return
     }
 
     onOpenChange(false)

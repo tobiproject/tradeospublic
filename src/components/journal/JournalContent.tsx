@@ -11,6 +11,7 @@ import { TradeFilters as TradeFiltersBar } from './TradeFilters'
 import { TradeFormSheet } from './TradeFormSheet'
 import { TradeDetailSheet } from './TradeDetailSheet'
 import { TradeDeleteDialog } from './TradeDeleteDialog'
+import { useAiAnalysis } from '@/hooks/useAiAnalysis'
 
 function paramsToFilters(params: URLSearchParams): TradeFilters {
   const filters: TradeFilters = {}
@@ -47,6 +48,7 @@ export function JournalContent() {
   const pathname = usePathname()
   const { activeAccount } = useAccountContext()
   const { fetchTrades, deleteTrade, getUniqueValues, isMutating } = useTrades()
+  const { triggerAnalysis } = useAiAnalysis()
 
   const [tradesPage, setTradesPage] = useState<TradesPage | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -122,8 +124,10 @@ export function JournalContent() {
     }
   }
 
-  const handleFormSuccess = () => {
+  const handleFormSuccess = (newTradeId?: string) => {
     setRefreshKey(k => k + 1)
+    // Auto-trigger KI analysis for newly created trades (AC-4.1)
+    if (newTradeId) triggerAnalysis(newTradeId)
     // Refresh suggestions after new trade
     if (activeAccount) {
       Promise.all([

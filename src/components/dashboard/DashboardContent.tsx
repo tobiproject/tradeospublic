@@ -11,6 +11,7 @@ import { EquityCurveChart } from './EquityCurveChart'
 import { TopStrategyCard } from './TopStrategyCard'
 import { RecentTradesTable } from './RecentTradesTable'
 import { TradeDetailSheet } from '@/components/journal/TradeDetailSheet'
+import { InsightsPreview } from '@/components/ai/InsightsPreview'
 import type { Trade } from '@/hooks/useTrades'
 
 type PeriodDays = 7 | 30 | 90 | null
@@ -128,6 +129,9 @@ export function DashboardContent() {
         ) : metrics ? (
           <RecentTradesTable trades={metrics.recentTrades} onTradeClick={handleTradeClick} />
         ) : null}
+
+        {/* KI Insights */}
+        <InsightsPreview />
       </div>
 
       <TradeDetailSheet
