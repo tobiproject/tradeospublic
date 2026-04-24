@@ -1,13 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-let _client: Anthropic | null = null
-
 export function getAnthropicClient(): Anthropic {
-  if (!_client) {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY is not set')
-    }
-    _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const key = process.env.ANTHROPIC_API_KEY
+  if (!key) {
+    throw new Error(`ANTHROPIC_API_KEY is not set (env keys available: ${Object.keys(process.env).filter(k => k.startsWith('ANTHROPIC') || k.startsWith('NEXT')).join(', ')})`)
   }
-  return _client
+  return new Anthropic({ apiKey: key })
 }
