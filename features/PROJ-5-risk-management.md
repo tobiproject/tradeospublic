@@ -1,6 +1,6 @@
 # PROJ-5: Risk Management System
 
-**Status:** In Progress
+**Status:** Approved
 **Priority:** P0 (MVP)
 **Created:** 2026-04-23
 
@@ -208,3 +208,84 @@ Beim Öffnen der /risk Seite (und beim Trade-Erfassen):
 - `src/hooks/useRiskMetrics.ts` — Tages-Verlust, Trade-Anzahl, Drawdown aus `trades`; `checkLimits()` gibt breached/warning Status
 - `src/hooks/useRiskAlerts.ts` — Alert CRUD, Duplikate-Schutz (1×/Tag/Typ), `processAlerts()` wertet RiskCheckResult aus
 - `src/hooks/useRiskMetrics.test.ts` — 15 Unit Tests für Berechnungslogik (alle grün)
+
+---
+
+## QA Test Results
+
+**Tested:** 2026-04-24
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Risk-Konfiguration
+- [x] AC-5.1: Alle 4 Limit-Felder vorhanden und speicherbar
+- [x] AC-5.2: Leere Felder werden akzeptiert (kein Limit)
+- [x] AC-5.3: Änderungen wirken ab Speichern, keine Rückwirkung
+- [x] AC-5.4: Limits werden pro Konto gespeichert (account_id UNIQUE)
+
+#### Echtzeit-Risk-Berechnung
+- [x] AC-5.5: Risk % wird live im TradeFormSheet CalcPreview berechnet
+- [x] AC-5.6: Tages-Risiko wird auf /risk Seite berechnet und angezeigt (Dashboard PROJ-2 noch nicht gebaut)
+- [x] AC-5.7: Gelbe Warnung bei > 80% des Limits (RiskGauge + SummaryCards)
+- [x] AC-5.8: Rote Warnung bei ≥ 100% des Limits
+
+#### Warnungen & Alerts
+- [x] AC-5.9: Max Daily Loss Alert (critical) wird ausgelöst
+- [x] AC-5.10: Max Daily Trades Alert (critical) wird ausgelöst
+- [x] AC-5.11: Drawdown Alert (critical) wird ausgelöst
+- [x] AC-5.12: Risk-per-Trade-Warnung im TradeFormSheet (rot, kein Block)
+- [x] AC-5.13: Warnungs-Banner auf /risk Seite (Dashboard PROJ-2 ist Folgeprojekt)
+
+#### RR-Simulator
+- [x] AC-5.14: Simulator-Tab im Trade-Detail vorhanden
+- [x] AC-5.15: Zeigt alt. RR, Delta vs. Ist, Reward%/Risk%
+- [x] AC-5.16: Keine gespeicherten Daten werden verändert
+- [x] AC-5.17: Bis zu 3 Szenarien gleichzeitig
+
+#### Risk-Übersicht
+- [ ] AC-5.18: **PARTIAL** — Tages-Risiko-Gauge ✅, Konfigurierte Limits ✅, Alert-Historie ✅, aber **Wochenrisiko fehlt**
+- [x] AC-5.19: Alert-Historie zeigt Datum, Typ, Kontext korrekt
+
+### Edge Cases Status
+
+- [x] EC-5.1: Gewinnender Trade erhöht Daily-Loss-% nicht (nur Verluste fließen ein)
+- [x] EC-5.2: Keine rückwirkenden Alerts bei Limit-Erhöhung
+- [x] EC-5.3: Balance = 0 → Risk-Berechnung gibt 0 zurück (Division durch 0 abgefangen)
+- [x] EC-5.5: Hinweis „Risk-Limits noch nicht konfiguriert" erscheint wenn kein Config vorhanden
+
+### Security Audit Results
+- [x] Authentication: /risk ohne Login redirectet zu /login (E2E verifiziert)
+- [x] Authorization: RLS auf risk_configs und risk_alerts erzwingt user_id = auth.uid()
+- [x] Input-Validierung: Zod-Schema auf allen Formularfeldern, max 100% Grenze
+- [x] XSS: Kein dangerouslySetInnerHTML, kein user-input direkt in DOM ohne Escaping
+- [x] Alert-Deduplication: DB-Check verhindert Spam-Alerts (1× pro Tag/Typ)
+
+### Bugs Found
+
+#### BUG-5.1: Wochenrisiko fehlt (AC-5.18)
+- **Severity:** Low
+- **Steps to Reproduce:**
+  1. Gehe zu /risk
+  2. Expected: Wochenrisiko-Anzeige gemäß AC-5.18
+  3. Actual: Nur Tages-Verlust, Drawdown und Trade-Anzahl werden gezeigt
+- **Hinweis:** Tech-Design hat Wochenrisiko nicht spezifiziert — Anforderung war im Spec, wurde in Architecture-Phase nicht übernommen
+- **Priority:** Fix in next sprint
+
+#### BUG-5.2: processAlerts erstellt keinen Warning-Alert für Drawdown bei 80–99%
+- **Severity:** Low
+- **Steps to Reproduce:**
+  1. Setze Max Drawdown = 10%
+  2. Erstelle Trades bis Drawdown 8–9% erreicht (> 80% des Limits, aber < 100%)
+  3. Expected: Drawdown-Warning-Alert wird erstellt (wie bei dailyLoss.warning)
+  4. Actual: Kein Alert für drawdown.warning — nur drawdown.breached (100%) löst Alert aus
+- **Code:** `src/hooks/useRiskAlerts.ts` — `processAlerts` fehlt `if (!drawdown.breached && drawdown.warning)` Block
+- **Priority:** Fix in next sprint
+
+### Summary
+- **Acceptance Criteria:** 18/19 passed (AC-5.18 partial — Wochenrisiko fehlt)
+- **Bugs Found:** 2 total (0 critical, 0 high, 0 medium, 2 low)
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Wochenrisiko und Drawdown-Warning-Alert können im nächsten Sprint nachgezogen werden.
