@@ -1,6 +1,6 @@
 # PROJ-2: Dashboard (Zentrale Übersicht)
 
-**Status:** In Progress
+**Status:** Approved
 **Priority:** P0 (MVP)
 **Created:** 2026-04-23
 
@@ -161,4 +161,99 @@ Kein neues Backend nötig — alle Werte werden aus bestehenden Tabellen abgelei
 
 | Paket | Zweck | Status |
 |---|---|---|
-| `recharts` | Line-Chart für Equity Curve | ❌ Noch nicht installiert — `npm install recharts` |
+| `recharts` | Line-Chart für Equity Curve | ✅ Installiert |
+
+---
+
+## QA Test Results
+
+**Tested:** 2026-04-24
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### KPI-Karten
+- [x] AC-2.1: 6 KPI-Karten vorhanden (Tages-P&L, Wochen-P&L, Monats-P&L, Winrate, Ø RR, Drawdown)
+- [x] AC-2.2: Tages-P&L grün/rot/grau je nach Vorzeichen (pnlColor Funktion)
+- [x] AC-2.3: Alle Werte beziehen sich auf activeAccount (useAccountContext)
+- [x] AC-2.4: "Noch keine Trades heute" wenn todayTradeCount === 0
+
+#### Equity Curve
+- [x] AC-2.5: recharts LineChart zeigt Balance-Verlauf
+- [x] AC-2.6: Zeitraum-Selector: 7T / 30T / 90T / Gesamt
+- [x] AC-2.7: ReferenceLine mit Startbalance als gestrichelte Baseline
+- [x] AC-2.8: Hover-Tooltip zeigt Datum, Balance und Δ Vortag
+
+#### Drawdown-Anzeige
+- [x] AC-2.9: Drawdown als % der Peak-Balance berechnet und angezeigt
+- [ ] AC-2.10: **PARTIAL** — Farb-Stufen (gelb >5%, rot >10%) ✅, aber Warnung im Alert-Bereich erscheint nur wenn vorher auf /risk zugegriffen wurde (Dashboard ruft processAlerts nicht selbst auf) — **BUG-2.1**
+
+#### Alert-Bereich
+- [x] AC-2.11: Alerts erscheinen als RiskAlertBanner wenn vorhanden
+- [x] AC-2.12: Alle Risk-Alert-Typen werden angezeigt (von risk_alerts Tabelle)
+- [x] AC-2.13: Alerts können einzeln dismissed werden
+
+#### Beste Strategie
+- [x] AC-2.14: Top-Strategie nach Profit-Faktor (letzte 30 Tage)
+- [x] AC-2.15: Zeigt "Mindestens 5 Trades nötig" wenn kein Ranking möglich
+
+#### Performance-Tabelle
+- [x] AC-2.16: Letzte 10 Trades mit Datum, Asset, L/S, Ergebnis, RR, Status
+- [x] AC-2.17: Klick öffnet TradeDetailSheet
+
+#### Responsiveness
+- [x] AC-2.18: Dashboard auf 1280px ohne horizontalen Scroll
+- [x] AC-2.19: Mobile 375px stacked layout (2-col grid on sm)
+
+### Edge Cases Status
+
+- [ ] EC-2.1: **BUG-2.2** — Kein "Ersten Trade erfassen" CTA wenn 0 Trades; zeigt stattdessen "Noch keine Trades vorhanden."
+- [ ] EC-2.2: **BUG-2.3** — winRate === null zeigt "Keine Daten" statt "N/A — nur Break-Even Trades"
+- [x] EC-2.3: Equity Curve zeigt Hinweis wenn keine Daten oder nur 1 Punkt
+- [x] EC-2.4: Account-Wechsel → load() reagiert via useCallback-Dependency auf activeAccount
+- [x] EC-2.5: Kein aktives Konto → separater leerer State angezeigt
+
+### Security Audit Results
+- [x] Authentication: /dashboard ohne Login redirectet zu /login (E2E verifiziert)
+- [x] Authorization: RLS auf trades-Tabelle — Nutzer sieht nur eigene Account-Daten
+- [x] XSS: Kein dangerouslySetInnerHTML, alle Texte via React-Rendering
+- [x] Datenlecks: Kein anderer Account sichtbar durch account_id-Filter auf allen Queries
+
+### Bugs Found
+
+#### BUG-2.1: AC-2.10 — Drawdown-Warnung im Alert-Bereich nicht selbstständig
+- **Severity:** Medium
+- **Steps to Reproduce:**
+  1. Konto hat Drawdown > 10% (ohne vorherigen /risk Besuch)
+  2. Navigiere zu /dashboard
+  3. Expected: Alert-Banner erscheint automatisch für Drawdown > 10%
+  4. Actual: KPI-Karte wird rot, aber kein Alert-Banner — Banner erscheint erst nach Besuch von /risk (processAlerts wird nur dort aufgerufen)
+- **Code:** `DashboardContent.tsx` — ruft kein `processAlerts()` auf
+- **Priority:** Fix in next sprint (Workaround: /risk besuchen)
+
+#### BUG-2.2: EC-2.1 — Kein CTA "Ersten Trade erfassen" bei 0 Trades
+- **Severity:** Low
+- **Steps to Reproduce:**
+  1. Konto mit 0 Trades öffnen
+  2. Expected: CTA-Button "Ersten Trade erfassen" mit Link zu /journal
+  3. Actual: RecentTradesTable zeigt "Noch keine Trades vorhanden." ohne Link
+- **Code:** `RecentTradesTable.tsx` — leerer State hat keinen CTA
+- **Priority:** Fix in next sprint
+
+#### BUG-2.3: EC-2.2 — Winrate-Text bei nur Break-Even Trades unspezifisch
+- **Severity:** Low
+- **Steps to Reproduce:**
+  1. Alle Trades eines Kontos haben outcome = 'breakeven'
+  2. Expected: "N/A — nur Break-Even Trades"
+  3. Actual: "Keine Daten" (gleicher Text wie bei 0 Trades)
+- **Code:** `KpiRow.tsx` — `winrateValue` unterscheidet nicht zwischen "keine Trades" und "nur Break-Even"
+- **Priority:** Nice to have
+
+### Summary
+- **Acceptance Criteria:** 18/19 passed (AC-2.10 partial)
+- **Unit Tests:** 23 neue Tests (alle grün) — calcDrawdown, calcWinRate, calcAvgRR, calcTopStrategy
+- **Bugs Found:** 3 total (0 critical, 0 high, 1 medium, 2 low)
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Deploy. BUG-2.1 bis BUG-2.3 können im nächsten Sprint behoben werden.
