@@ -53,6 +53,13 @@ const schema = z.object({
   emotion_after: z.string().optional(),
   tags: z.array(z.string()).optional(),
   notes: z.string().max(5000, 'Maximal 5000 Zeichen').optional(),
+}).superRefine((data, ctx) => {
+  if (data.entry_price && data.sl_price && data.sl_price === data.entry_price) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'SL muss sich vom Entry unterscheiden', path: ['sl_price'] })
+  }
+  if (data.entry_price && data.tp_price && data.tp_price === data.entry_price) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'TP muss sich vom Entry unterscheiden', path: ['tp_price'] })
+  }
 })
 
 type FormValues = z.infer<typeof schema>
@@ -302,6 +309,7 @@ export function TradeFormSheet({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
+    mode: 'onChange',
     defaultValues: {
       traded_at: nowDatetimeLocal(),
       asset: '',
@@ -776,7 +784,7 @@ export function TradeFormSheet({
               <Button type="button" variant="outline" onClick={handleClose} disabled={isMutating} className="flex-1">
                 Abbrechen
               </Button>
-              <Button type="submit" disabled={isMutating} className="flex-1">
+              <Button type="submit" disabled={isMutating || (form.formState.isDirty && !form.formState.isValid)} className="flex-1">
                 {isMutating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {isEdit ? 'Speichern' : 'Erfassen'}
               </Button>

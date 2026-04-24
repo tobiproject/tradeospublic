@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Toaster } from '@/components/ui/sonner'
 import { useTrades, type Trade, type TradeFilters, type TradesPage } from '@/hooks/useTrades'
 import { useAccountContext } from '@/contexts/AccountContext'
 import { TradeTable } from './TradeTable'
@@ -141,7 +140,6 @@ export function JournalContent() {
 
   return (
     <>
-      <Toaster />
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">

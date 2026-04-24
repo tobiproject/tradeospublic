@@ -350,10 +350,12 @@ lib/
 - **Unit Tests:** 43 Tests — alle bestanden (`trade-calculations.ts` vollständig abgedeckt)
 - **E2E Tests:** 29 Tests — 1 passed (ohne Credentials), 28 skipped (benötigen `TEST_USER_EMAIL`/`TEST_USER_PASSWORD`)
 
+### Bug Fixes (2026-04-24)
+
+- **BUG-3.1 FIXED:** `mode: 'onChange'` in `useForm` + `disabled={isMutating || (form.formState.isDirty && !form.formState.isValid)}` auf Submit-Button
+- **BUG-3.2 FIXED:** `superRefine` in Zod-Schema prüft `sl_price !== entry_price` und `tp_price !== entry_price`
+- **BUG-3.3 FIXED:** `<Toaster />` aus `JournalContent.tsx` entfernt (Root-Layout ist ausreichend)
+
 ### Production-Ready Decision
 
-**NOT READY** — 2 Medium-Bugs müssen zuerst behoben werden:
-- BUG-3.1: Submit-Button disabled-State
-- BUG-3.2: SL = Entry Validierung
-
-BUG-3.3 (Low) kann parallel oder danach behoben werden.
+**READY** — Alle Critical/High/Medium-Bugs behoben. Low-Bug (BUG-3.3) ebenfalls behoben.
