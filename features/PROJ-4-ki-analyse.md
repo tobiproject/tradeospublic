@@ -1,6 +1,6 @@
 # PROJ-4: KI-Analyse Engine
 
-**Status:** Architected
+**Status:** In Progress
 **Priority:** P1
 **Created:** 2026-04-23
 
@@ -218,4 +218,35 @@ AppNav
 
 | Paket | Zweck | Status |
 |---|---|---|
-| `@anthropic-ai/sdk` | Claude API Client | Neu installieren |
+| `@anthropic-ai/sdk` | Claude API Client | Installiert |
+
+---
+
+## Backend Implementation Notes
+
+**Implementiert (2026-04-24):**
+
+### Neue Dateien
+- `src/lib/anthropic.ts` — Singleton Anthropic-Client, wirft Fehler wenn ANTHROPIC_API_KEY fehlt
+- `src/lib/ai-prompts.ts` — Tool-Schemas (TRADE_ANALYSIS_TOOL, PERIOD_ANALYSIS_TOOL, PATTERN_ANALYSIS_TOOL) + Prompt-Builder-Funktionen
+- `src/app/api/ai/analyze-trade/route.ts` — POST: Ownership-Check, Upsert ai_analyses, fire-and-forget runAnalysis() mit 3-Versuch Exponential-Backoff
+- `src/app/api/ai/analysis/route.ts` — GET: Einzelanalyse per trade_id oder period_start abrufen
+- `src/app/api/ai/analyze-period/route.ts` — POST: Wochen-/Monatsanalyse starten inkl. Vormonats-Statistik-Vergleich
+- `src/app/api/ai/analyses-list/route.ts` — GET: Listet abgeschlossene Perioden-Analysen
+- `src/hooks/useAiAnalysis.ts` — triggerAnalysis() + fetchAnalysis() + 3s-Polling mit stopPolling()
+- `src/hooks/useAiPeriodAnalysis.ts` — triggerPeriodAnalysis() + fetchRecentAnalyses() + Polling
+- `src/hooks/useTradingRules.ts` — CRUD: fetchRules, createRule, updateRule, deleteRule
+
+### Integrationstests (alle grün)
+- `src/app/api/ai/analyze-trade/route.test.ts` — 6 Tests (401, 400 invalid UUID, 400 missing, 404 trade not found, 200 new analysis, 200 reset existing)
+- `src/app/api/ai/analysis/route.test.ts` — 5 Tests (401, 400 no params, 200 null, 200 data found, 200 by period_start)
+- `src/app/api/ai/analyze-period/route.test.ts` — 6 Tests (401, 400 invalid UUID, 400 bad type, 400 bad date, 200 new, 200 reset existing)
+
+### Umgebungsvariablen
+`ANTHROPIC_API_KEY` muss in `.env.local` gesetzt werden (von console.anthropic.com)
+
+### Noch offen (Frontend)
+- KI-Analyse Tab in TradeDetailSheet
+- `/analysen` Seite mit InsightsFeed, Tabs, TradingRulesEditor
+- Dashboard InsightsPreview
+- AppNav "Analysen" Link
