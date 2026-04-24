@@ -1,6 +1,6 @@
 # PROJ-5: Risk Management System
 
-**Status:** Architected
+**Status:** In Progress
 **Priority:** P0 (MVP)
 **Created:** 2026-04-23
 
@@ -192,3 +192,19 @@ Beim Öffnen der /risk Seite (und beim Trade-Erfassen):
 | shadcn `Tabs` | RR-Simulator Tab in TradeDetailSheet ✅ installiert |
 | shadcn `Card` | Risk-Summary-Cards ✅ installiert |
 | shadcn `Switch` | Toggle für Limits aktiv/inaktiv (optional) ✅ installiert |
+
+---
+
+## Backend Implementation Notes (2026-04-24)
+
+### Supabase Migration Applied: `proj5_risk_management`
+- `risk_configs` Tabelle: 1 Zeile pro Konto (UNIQUE auf account_id), Upsert-Pattern, 4 optionale Limit-Felder, `updated_at` Trigger
+- `risk_alerts` Tabelle: Alert-Historie mit Typ-Check, Severity-Check, JSONB context_data, `dismissed_at`
+- RLS auf beiden Tabellen: SELECT/INSERT/UPDATE/DELETE je auf `auth.uid() = user_id`
+- 3 Indexes: `account_id`, `created_at DESC`, `(account_id, created_at DESC)` composite
+
+### Files Created
+- `src/hooks/useRiskConfig.ts` — Lesen + Upsert von `risk_configs` per Konto
+- `src/hooks/useRiskMetrics.ts` — Tages-Verlust, Trade-Anzahl, Drawdown aus `trades`; `checkLimits()` gibt breached/warning Status
+- `src/hooks/useRiskAlerts.ts` — Alert CRUD, Duplikate-Schutz (1×/Tag/Typ), `processAlerts()` wertet RiskCheckResult aus
+- `src/hooks/useRiskMetrics.test.ts` — 15 Unit Tests für Berechnungslogik (alle grün)
