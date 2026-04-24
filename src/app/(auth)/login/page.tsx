@@ -1,0 +1,18 @@
+import type { Metadata } from 'next'
+import { LoginForm } from '@/components/auth/LoginForm'
+
+export const metadata: Metadata = {
+  title: 'Login — Trade OS',
+}
+
+export default function LoginPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold">Willkommen zurück</h2>
+        <p className="text-sm text-muted-foreground">Melde dich mit deinen Zugangsdaten an.</p>
+      </div>
+      <LoginForm />
+    </div>
+  )
+}
