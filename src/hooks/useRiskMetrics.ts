@@ -21,7 +21,7 @@ export interface DailyRiskMetrics {
 export interface RiskCheckResult {
   dailyLoss: { value: number; pct: number; limitPct: number | null; ratio: number | null; breached: boolean; warning: boolean }
   dailyTrades: { count: number; limit: number | null; breached: boolean; warning: boolean }
-  drawdown: { pct: number; limitPct: number | null; breached: boolean; warning: boolean }
+  drawdown: { pct: number; limitPct: number | null; ratio: number | null; breached: boolean; warning: boolean }
 }
 
 function todayISO(): string {
@@ -119,6 +119,7 @@ export function useRiskMetrics() {
     const drawdown = {
       pct: drawdownPct,
       limitPct: config.max_drawdown_pct,
+      ratio: ddRatio,
       breached: ddRatio !== null && ddRatio >= 1,
       warning: ddRatio !== null && ddRatio >= warningThreshold && ddRatio < 1,
     }

@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { de } from 'date-fns/locale'
-import { Edit2, Trash2, X, ImageIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Edit2, Trash2, TrendingUp, TrendingDown } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { RRSimulator } from '@/components/risk/RRSimulator'
 import type { Trade } from '@/hooks/useTrades'
 
 const EMOTION_LABELS: Record<string, string> = {
@@ -91,7 +93,13 @@ export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }
             </p>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+          <Tabs defaultValue="detail" className="flex-1 flex flex-col min-h-0">
+            <TabsList className="mx-6 mt-4 mb-0 w-auto self-start">
+              <TabsTrigger value="detail">Details</TabsTrigger>
+              <TabsTrigger value="simulator">RR-Simulator</TabsTrigger>
+            </TabsList>
+
+          <TabsContent value="detail" className="flex-1 overflow-y-auto px-6 py-4 space-y-5 mt-0">
             {/* Result highlight */}
             <div className="rounded-lg bg-card border border-border/60 p-4 grid grid-cols-3 gap-4 text-center">
               <div>
@@ -204,7 +212,12 @@ export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }
                 </div>
               </>
             )}
-          </div>
+          </TabsContent>
+
+          <TabsContent value="simulator" className="flex-1 overflow-y-auto px-6 py-4 mt-0">
+            <RRSimulator trade={trade} />
+          </TabsContent>
+          </Tabs>
         </SheetContent>
       </Sheet>
 

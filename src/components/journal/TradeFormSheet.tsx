@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 
 import { useTrades, type Trade, type CreateTradeInput } from '@/hooks/useTrades'
+import { useRiskConfig } from '@/hooks/useRiskConfig'
 import { calcRR, calcRiskPercent, calcResultPercent, calcOutcome, validateSLSide } from '@/lib/trade-calculations'
 import { useAccountContext } from '@/contexts/AccountContext'
 import { cn } from '@/lib/utils'
@@ -66,9 +67,10 @@ type FormValues = z.infer<typeof schema>
 
 // ─── Live Calc Preview ───────────────────────────────────────────────────────
 
-function CalcPreview({ values, accountBalance }: {
+function CalcPreview({ values, accountBalance, maxRiskPct }: {
   values: Partial<Pick<FormValues, 'entry_price' | 'sl_price' | 'tp_price' | 'lot_size' | 'result_currency' | 'direction'>>
   accountBalance: number
+  maxRiskPct?: number | null
 }) {
   const rr = calcRR(values.entry_price, values.sl_price, values.tp_price)
   const risk = calcRiskPercent(values.entry_price, values.sl_price, values.lot_size, accountBalance)
@@ -77,6 +79,7 @@ function CalcPreview({ values, accountBalance }: {
   const slWarning = values.direction && values.entry_price && values.sl_price
     ? validateSLSide(values.direction, values.entry_price, values.sl_price)
     : null
+  const riskExceeded = risk !== null && maxRiskPct != null && risk > maxRiskPct
 
   return (
     <div className="rounded-lg bg-muted/40 border border-border/60 p-4 space-y-3">
@@ -87,7 +90,7 @@ function CalcPreview({ values, accountBalance }: {
         </div>
         <div>
           <p className="text-xs text-muted-foreground mb-0.5">Risk %</p>
-          <p className="text-lg font-bold tabular-nums text-amber-400">
+          <p className={cn('text-lg font-bold tabular-nums', riskExceeded ? 'text-red-400' : 'text-amber-400')}>
             {risk !== null ? `${risk.toFixed(2)}%` : '–'}
           </p>
         </div>
@@ -110,6 +113,12 @@ function CalcPreview({ values, accountBalance }: {
           )}>
             {outcome === 'win' ? 'Win' : outcome === 'loss' ? 'Loss' : 'Breakeven'}
           </Badge>
+        </div>
+      )}
+      {riskExceeded && (
+        <div className="flex items-start gap-2 text-xs text-red-400 bg-red-500/10 rounded-md p-2">
+          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <span>Risk {risk!.toFixed(2)}% überschreitet dein Limit von {maxRiskPct}%</span>
         </div>
       )}
       {slWarning && (
@@ -301,6 +310,8 @@ export function TradeFormSheet({
 }: Props) {
   const { activeAccount } = useAccountContext()
   const { createTrade, updateTrade, uploadScreenshot, isMutating } = useTrades()
+  const { fetchRiskConfig } = useRiskConfig()
+  const [maxRiskPct, setMaxRiskPct] = useState<number | null>(null)
 
   const [existingUrls, setExistingUrls] = useState<string[]>([])
   const [newFiles, setNewFiles] = useState<ScreenshotFile[]>([])
@@ -378,6 +389,14 @@ export function TradeFormSheet({
   useEffect(() => {
     return () => { newFiles.forEach(f => URL.revokeObjectURL(f.preview)) }
   }, [newFiles])
+
+  // Load risk config when sheet opens
+  useEffect(() => {
+    if (!open || !activeAccount) return
+    fetchRiskConfig().then(cfg => {
+      setMaxRiskPct(cfg?.max_risk_per_trade_pct ?? null)
+    })
+  }, [open, activeAccount, fetchRiskConfig])
 
   const handleClose = useCallback(() => {
     if (form.formState.isDirty && !isMutating) {
@@ -582,6 +601,7 @@ export function TradeFormSheet({
                 <CalcPreview
                   values={liveValues}
                   accountBalance={activeAccount?.start_balance ?? 10000}
+                  maxRiskPct={maxRiskPct}
                 />
               </div>
 
