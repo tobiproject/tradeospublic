@@ -25,9 +25,11 @@
 | PROJ-9 | Automatisierung & Smart Features | Deployed | [PROJ-9-automatisierung.md](PROJ-9-automatisierung.md) | 2026-04-23 |
 | PROJ-10 | Lernmodus (Replay, Quiz, KI-Coach) | Deployed | [PROJ-10-lernmodus.md](PROJ-10-lernmodus.md) | 2026-04-23 |
 
+| PROJ-11 | Trading Knowledge Base | Planned | [PROJ-11-knowledge-base.md](PROJ-11-knowledge-base.md) | 2026-04-25 |
+
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-11
+## Next Available ID: PROJ-12
 
 ## Build Order (Empfohlen)
 
