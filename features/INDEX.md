@@ -20,7 +20,7 @@
 | PROJ-4 | KI-Analyse Engine | Deployed | [PROJ-4-ki-analyse.md](PROJ-4-ki-analyse.md) | 2026-04-23 |
 | PROJ-5 | Risk Management System | Approved | [PROJ-5-risk-management.md](PROJ-5-risk-management.md) | 2026-04-23 |
 | PROJ-6 | Performance & Statistik | Deployed | [PROJ-6-performance-statistik.md](PROJ-6-performance-statistik.md) | 2026-04-23 |
-| PROJ-7 | News-Integration & Analyse | Approved | [PROJ-7-news-integration.md](PROJ-7-news-integration.md) | 2026-04-23 |
+| PROJ-7 | News-Integration & Analyse | Deployed | [PROJ-7-news-integration.md](PROJ-7-news-integration.md) | 2026-04-23 |
 | PROJ-8 | Backup & Export | Planned | [PROJ-8-backup-export.md](PROJ-8-backup-export.md) | 2026-04-23 |
 | PROJ-9 | Automatisierung & Smart Features | Planned | [PROJ-9-automatisierung.md](PROJ-9-automatisierung.md) | 2026-04-23 |
 | PROJ-10 | Lernmodus (Replay, Quiz, KI-Coach) | Planned | [PROJ-10-lernmodus.md](PROJ-10-lernmodus.md) | 2026-04-23 |

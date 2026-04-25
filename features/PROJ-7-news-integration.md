@@ -1,6 +1,6 @@
 # PROJ-7: News-Integration & Analyse
 
-**Status:** In Review
+**Status:** Deployed
 **Priority:** P1
 **Created:** 2026-04-23
 
