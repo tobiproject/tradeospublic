@@ -12,6 +12,8 @@ import { TradeFormSheet } from './TradeFormSheet'
 import { TradeDetailSheet } from './TradeDetailSheet'
 import { TradeDeleteDialog } from './TradeDeleteDialog'
 import { useAiAnalysis } from '@/hooks/useAiAnalysis'
+import { ExportMenu } from '@/components/export/ExportMenu'
+import { PdfReportButton } from '@/components/export/PdfReportButton'
 
 function paramsToFilters(params: URLSearchParams): TradeFilters {
   const filters: TradeFilters = {}
@@ -153,10 +155,14 @@ export function JournalContent() {
               {activeAccount ? `Konto: ${activeAccount.name}` : 'Kein aktives Konto'}
             </p>
           </div>
-          <Button onClick={handleNewTrade} disabled={!activeAccount} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Neuer Trade
-          </Button>
+          <div className="flex items-center gap-2">
+            <PdfReportButton />
+            <ExportMenu filters={filters} />
+            <Button onClick={handleNewTrade} disabled={!activeAccount} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Neuer Trade
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
