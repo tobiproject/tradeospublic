@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { X, Upload, Loader2, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react'
+import { X, Upload, Loader2, TrendingUp, TrendingDown, AlertTriangle, Newspaper, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
@@ -54,6 +54,10 @@ const schema = z.object({
   emotion_after: z.string().optional(),
   tags: z.array(z.string()).optional(),
   notes: z.string().max(5000, 'Maximal 5000 Zeichen').optional(),
+  news_event_present: z.enum(['yes', 'no', 'unknown']).optional(),
+  news_event_name: z.string().max(100).optional(),
+  news_impact_level: z.enum(['high', 'medium', 'low']).optional(),
+  news_timing_minutes: z.number().int().optional(),
 }).superRefine((data, ctx) => {
   if (data.entry_price && data.sl_price && data.sl_price === data.entry_price) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'SL muss sich vom Entry unterscheiden', path: ['sl_price'] })
@@ -287,6 +291,110 @@ function TagInput({ value, onChange, disabled }: {
   )
 }
 
+// ─── News Event Section ──────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function NewsEventSection({ form }: { form: any }) {
+  const newsPresent = form.watch('news_event_present')
+  const showDetails = newsPresent === 'yes'
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border/60 p-3">
+      <div className="flex items-center gap-2">
+        <Newspaper className="h-4 w-4 text-muted-foreground" />
+        <p className="text-sm font-medium">News-Event</p>
+      </div>
+      <FormField
+        control={form.control}
+        name="news_event_present"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-xs text-muted-foreground">War ein News-Event aktiv?</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value ?? ''}>
+              <FormControl>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Nicht angegeben" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="yes">Ja</SelectItem>
+                <SelectItem value="no">Nein</SelectItem>
+                <SelectItem value="unknown">Nicht bekannt</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormItem>
+        )}
+      />
+      {showDetails && (
+        <div className="space-y-3 pt-1">
+          <FormField
+            control={form.control}
+            name="news_event_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs text-muted-foreground">Event-Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="z.B. NFP, FOMC, CPI…" className="h-8 text-sm" {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="news_impact_level"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-muted-foreground">Impact</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                    <FormControl>
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue placeholder="Level" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="high">🔴 High</SelectItem>
+                      <SelectItem value="medium">🟡 Medium</SelectItem>
+                      <SelectItem value="low">🟢 Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="news_timing_minutes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-muted-foreground">Timing</FormLabel>
+                  <Select
+                    onValueChange={v => field.onChange(Number(v))}
+                    value={field.value !== undefined ? String(field.value) : ''}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue placeholder="Zeitpunkt" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="-60">60 min vorher</SelectItem>
+                      <SelectItem value="-30">30 min vorher</SelectItem>
+                      <SelectItem value="-15">15 min vorher</SelectItem>
+                      <SelectItem value="0">Während Event</SelectItem>
+                      <SelectItem value="15">15 min danach</SelectItem>
+                      <SelectItem value="30">30 min danach</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 interface Props {
@@ -359,6 +467,10 @@ export function TradeFormSheet({
         emotion_after: editingTrade.emotion_after ?? '',
         tags: editingTrade.tags ?? [],
         notes: editingTrade.notes ?? '',
+        news_event_present: editingTrade.news_event_present === true ? 'yes' : editingTrade.news_event_present === false ? 'no' : 'unknown',
+        news_event_name: editingTrade.news_event_name ?? '',
+        news_impact_level: editingTrade.news_impact_level ?? undefined,
+        news_timing_minutes: editingTrade.news_timing_minutes ?? undefined,
       })
       setExistingUrls(editingTrade.screenshot_urls ?? [])
       setNewFiles([])
@@ -425,6 +537,10 @@ export function TradeFormSheet({
       emotion_after: values.emotion_after || undefined,
       notes: values.notes || undefined,
       screenshot_urls: existingUrls,
+      news_event_present: values.news_event_present === 'yes' ? true : values.news_event_present === 'no' ? false : null,
+      news_event_name: values.news_event_present === 'yes' ? (values.news_event_name || null) : null,
+      news_impact_level: values.news_event_present === 'yes' ? (values.news_impact_level ?? null) : null,
+      news_timing_minutes: values.news_event_present === 'yes' ? (values.news_timing_minutes ?? null) : null,
     }
 
     if (isEdit && editingTrade) {
@@ -787,6 +903,9 @@ export function TradeFormSheet({
                     </FormItem>
                   )}
                 />
+
+                {/* ── News-Event ────────────────────────── */}
+                <NewsEventSection form={form} />
 
                 <div className="space-y-2">
                   <p className="text-sm font-medium leading-none">Screenshots</p>

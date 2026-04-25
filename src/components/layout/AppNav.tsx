@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/performance', label: 'Performance' },
   { href: '/analysen', label: 'Analysen' },
   { href: '/risk', label: 'Risk' },
+  { href: '/kalender', label: 'Kalender' },
   { href: '/accounts', label: 'Konten' },
 ]
 

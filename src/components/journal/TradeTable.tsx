@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { ChevronUp, ChevronDown, ChevronsUpDown, Image, TrendingUp, TrendingDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, Image, TrendingUp, TrendingDown, Newspaper } from 'lucide-react'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -140,6 +140,9 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
               <TableHead className="hidden sm:table-cell text-center w-8">
                 <Image className="h-3.5 w-3.5 inline-block" />
               </TableHead>
+              <TableHead className="hidden sm:table-cell text-center w-8">
+                <Newspaper className="h-3.5 w-3.5 inline-block" />
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -213,6 +216,20 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
                     {(trade.screenshot_urls?.length ?? 0) > 0 && (
                       <span className="inline-flex items-center justify-center text-muted-foreground">
                         <Image className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-center">
+                    {trade.news_event_present === true && (
+                      <span
+                        className={cn(
+                          'inline-flex items-center justify-center',
+                          trade.news_impact_level === 'high' ? 'text-red-400' :
+                          trade.news_impact_level === 'medium' ? 'text-amber-400' : 'text-emerald-400'
+                        )}
+                        title={trade.news_event_name ?? 'News-Event'}
+                      >
+                        <Newspaper className="h-3.5 w-3.5" />
                       </span>
                     )}
                   </TableCell>

@@ -17,6 +17,7 @@ import { WinrateCharts } from './WinrateCharts'
 import { TradeHeatmap } from './TradeHeatmap'
 import { DrawdownChart } from './DrawdownChart'
 import { DrawdownPhaseTable } from './DrawdownPhaseTable'
+import { NewsAnalyseTab } from './NewsAnalyseTab'
 
 // ─── URL serialisation ────────────────────────────────────────────────────────
 
@@ -142,6 +143,7 @@ export function PerformanceContent() {
             <TabsTrigger value="winrate">Winrate</TabsTrigger>
             <TabsTrigger value="heatmap">Heatmap</TabsTrigger>
             <TabsTrigger value="drawdown">Drawdown</TabsTrigger>
+            <TabsTrigger value="news">News-Analyse</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 mt-0">
@@ -168,6 +170,9 @@ export function PerformanceContent() {
               currentDrawdown={stats.currentDrawdownPct}
             />
             <DrawdownPhaseTable phases={stats.drawdownPhases} />
+          </TabsContent>
+          <TabsContent value="news" className="mt-0">
+            <NewsAnalyseTab />
           </TabsContent>
         </Tabs>
       )}

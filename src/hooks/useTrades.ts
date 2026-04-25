@@ -29,6 +29,10 @@ export interface Trade {
   emotion_after: string | null
   notes: string | null
   screenshot_urls: string[]
+  news_event_present: boolean | null
+  news_event_name: string | null
+  news_impact_level: 'high' | 'medium' | 'low' | null
+  news_timing_minutes: number | null
   created_at: string
   updated_at: string
 }
@@ -62,6 +66,10 @@ export interface CreateTradeInput {
   emotion_after?: string
   notes?: string
   screenshot_urls?: string[]
+  news_event_present?: boolean | null
+  news_event_name?: string | null
+  news_impact_level?: 'high' | 'medium' | 'low' | null
+  news_timing_minutes?: number | null
 }
 
 export interface TradesPage {
