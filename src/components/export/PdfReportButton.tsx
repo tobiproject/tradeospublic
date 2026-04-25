@@ -8,29 +8,7 @@ import { useAccountContext } from '@/contexts/AccountContext'
 import { createClient } from '@/lib/supabase'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { de } from 'date-fns/locale'
-
-interface KpiSummary {
-  totalTrades: number
-  winrate: number
-  totalPnl: number
-  avgPnl: number
-  bestTrade: number
-  worstTrade: number
-}
-
-function computeKpi(trades: { outcome: string | null; result_currency: number | null }[]): KpiSummary {
-  const decided = trades.filter(t => t.outcome === 'win' || t.outcome === 'loss')
-  const wins = decided.filter(t => t.outcome === 'win')
-  const pnls = trades.map(t => t.result_currency ?? 0)
-  return {
-    totalTrades: trades.length,
-    winrate: decided.length ? (wins.length / decided.length) * 100 : 0,
-    totalPnl: pnls.reduce((a, b) => a + b, 0),
-    avgPnl: trades.length ? pnls.reduce((a, b) => a + b, 0) / trades.length : 0,
-    bestTrade: pnls.length ? Math.max(...pnls) : 0,
-    worstTrade: pnls.length ? Math.min(...pnls) : 0,
-  }
-}
+import { computeKpi } from '@/lib/export-utils'
 
 export function PdfReportButton() {
   const { activeAccount } = useAccountContext()

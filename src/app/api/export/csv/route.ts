@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { format } from 'date-fns'
+import { escapeCell } from '@/lib/export-utils'
 
 const HEADERS_DE = [
   'ID', 'Konto-ID', 'Datum', 'Asset', 'Richtung', 'Entry', 'Stop-Loss', 'Take-Profit',
@@ -16,14 +17,6 @@ const HEADERS_EN = [
   'News Event', 'News Name', 'News Impact', 'News Timing (min)', 'Notes', 'Created At',
 ]
 
-function escapeCell(value: unknown): string {
-  if (value === null || value === undefined) return ''
-  const str = Array.isArray(value) ? value.join('; ') : String(value)
-  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-    return `"${str.replace(/"/g, '""')}"`
-  }
-  return str
-}
 
 function tradeToRow(trade: Record<string, unknown>): string {
   const cells = [
