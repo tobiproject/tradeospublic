@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { Plus, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTrades, type Trade, type TradeFilters, type TradesPage } from '@/hooks/useTrades'
 import { useAccountContext } from '@/contexts/AccountContext'
@@ -12,8 +12,10 @@ import { TradeFormSheet } from './TradeFormSheet'
 import { TradeDetailSheet } from './TradeDetailSheet'
 import { TradeDeleteDialog } from './TradeDeleteDialog'
 import { useAiAnalysis } from '@/hooks/useAiAnalysis'
+import { toast } from 'sonner'
 import { ExportMenu } from '@/components/export/ExportMenu'
 import { PdfReportButton } from '@/components/export/PdfReportButton'
+import { ImportWizardDialog } from '@/components/import/ImportWizardDialog'
 
 function paramsToFilters(params: URLSearchParams): TradeFilters {
   const filters: TradeFilters = {}
@@ -57,6 +59,7 @@ export function JournalContent() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null)
   const [detailTrade, setDetailTrade] = useState<Trade | null>(null)
   const [deletingTrade, setDeletingTrade] = useState<Trade | null>(null)
@@ -64,6 +67,7 @@ export function JournalContent() {
   const [assetSuggestions, setAssetSuggestions] = useState<string[]>([])
   const [setupSuggestions, setSetupSuggestions] = useState<string[]>([])
   const [strategySuggestions, setStrategySuggestions] = useState<string[]>([])
+  const activeToastCount = useRef(0)
 
   const currentPage = Number(searchParams.get('page') ?? '1')
   const filters = paramsToFilters(searchParams)
@@ -105,6 +109,27 @@ export function JournalContent() {
     setEditingTrade(null)
     setIsFormOpen(true)
   }
+
+  const handleCompletionNeeded = useCallback((tradeId: string, type: 'notes' | 'screenshot') => {
+    if (activeToastCount.current >= 3) return
+    activeToastCount.current += 1
+    const msg = type === 'notes'
+      ? 'Kein Kommentar erfasst — Jetzt ergänzen?'
+      : 'Kein Screenshot vorhanden — Jetzt hinzufügen?'
+    setTimeout(() => {
+      toast.warning(msg, {
+        action: {
+          label: 'Bearbeiten',
+          onClick: () => {
+            const t = tradesPage?.trades.find(x => x.id === tradeId)
+            if (t) { setEditingTrade(t); setIsFormOpen(true) }
+          },
+        },
+        onDismiss: () => { activeToastCount.current = Math.max(0, activeToastCount.current - 1) },
+        onAutoClose: () => { activeToastCount.current = Math.max(0, activeToastCount.current - 1) },
+      })
+    }, 600)
+  }, [tradesPage])
 
   const handleEditTrade = (trade: Trade) => {
     setDetailTrade(null)
@@ -158,6 +183,10 @@ export function JournalContent() {
           <div className="flex items-center gap-2">
             <PdfReportButton />
             <ExportMenu filters={filters} />
+            <Button variant="outline" onClick={() => setIsImportOpen(true)} disabled={!activeAccount} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Import
+            </Button>
             <Button onClick={handleNewTrade} disabled={!activeAccount} className="gap-2">
               <Plus className="h-4 w-4" />
               Neuer Trade
@@ -192,6 +221,7 @@ export function JournalContent() {
         setupSuggestions={setupSuggestions}
         strategySuggestions={strategySuggestions}
         onSuccess={handleFormSuccess}
+        onCompletionNeeded={handleCompletionNeeded}
       />
 
       {/* Detail Sheet */}
@@ -201,6 +231,13 @@ export function JournalContent() {
         onOpenChange={open => { if (!open) setDetailTrade(null) }}
         onEdit={handleEditTrade}
         onDelete={handleDeleteClick}
+      />
+
+      {/* Import Wizard */}
+      <ImportWizardDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        onImported={() => setRefreshKey(k => k + 1)}
       />
 
       {/* Delete Dialog */}

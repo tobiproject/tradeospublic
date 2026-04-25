@@ -405,6 +405,7 @@ interface Props {
   setupSuggestions: string[]
   strategySuggestions: string[]
   onSuccess: (newTradeId?: string) => void
+  onCompletionNeeded?: (tradeId: string, type: 'notes' | 'screenshot') => void
 }
 
 export function TradeFormSheet({
@@ -415,6 +416,7 @@ export function TradeFormSheet({
   setupSuggestions,
   strategySuggestions,
   onSuccess,
+  onCompletionNeeded,
 }: Props) {
   const { activeAccount } = useAccountContext()
   const { createTrade, updateTrade, uploadScreenshot, isMutating } = useTrades()
@@ -579,6 +581,12 @@ export function TradeFormSheet({
       }
 
       toast.success('Trade erfasst')
+      // Completion prompts (AC-9.7, AC-9.8)
+      const missingNotes = !values.notes
+      const missingScreenshot = existingUrls.length === 0 && newFiles.length === 0
+      if (missingNotes || missingScreenshot) {
+        onCompletionNeeded?.(trade.id, missingNotes ? 'notes' : 'screenshot')
+      }
       onOpenChange(false)
       onSuccess(trade.id)
       return
@@ -744,6 +752,20 @@ export function TradeFormSheet({
                             </datalist>
                           </>
                         </FormControl>
+                        {setupSuggestions.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {setupSuggestions.slice(0, 3).map(s => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => field.onChange(s)}
+                                className="text-xs px-2 py-0.5 rounded-full border border-border/60 bg-muted/40 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+                              >
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}

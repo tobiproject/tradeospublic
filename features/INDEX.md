@@ -22,7 +22,7 @@
 | PROJ-6 | Performance & Statistik | Deployed | [PROJ-6-performance-statistik.md](PROJ-6-performance-statistik.md) | 2026-04-23 |
 | PROJ-7 | News-Integration & Analyse | Deployed | [PROJ-7-news-integration.md](PROJ-7-news-integration.md) | 2026-04-23 |
 | PROJ-8 | Backup & Export | Deployed | [PROJ-8-backup-export.md](PROJ-8-backup-export.md) | 2026-04-23 |
-| PROJ-9 | Automatisierung & Smart Features | Architected | [PROJ-9-automatisierung.md](PROJ-9-automatisierung.md) | 2026-04-23 |
+| PROJ-9 | Automatisierung & Smart Features | In Progress | [PROJ-9-automatisierung.md](PROJ-9-automatisierung.md) | 2026-04-23 |
 | PROJ-10 | Lernmodus (Replay, Quiz, KI-Coach) | Planned | [PROJ-10-lernmodus.md](PROJ-10-lernmodus.md) | 2026-04-23 |
 
 <!-- Add features above this line -->

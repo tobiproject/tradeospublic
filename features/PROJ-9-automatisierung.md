@@ -1,6 +1,6 @@
 # PROJ-9: Automatisierung & Smart Features
 
-**Status:** Architected
+**Status:** In Progress
 **Priority:** P2
 **Created:** 2026-04-23
 

@@ -12,6 +12,7 @@ import { TopStrategyCard } from './TopStrategyCard'
 import { RecentTradesTable } from './RecentTradesTable'
 import { TradeDetailSheet } from '@/components/journal/TradeDetailSheet'
 import { InsightsPreview } from '@/components/ai/InsightsPreview'
+import { DailyPlanCTA } from '@/components/tagesplan/DailyPlanCTA'
 import type { Trade } from '@/hooks/useTrades'
 
 type PeriodDays = 7 | 30 | 90 | null
@@ -129,6 +130,9 @@ export function DashboardContent() {
         ) : metrics ? (
           <RecentTradesTable trades={metrics.recentTrades} onTradeClick={handleTradeClick} />
         ) : null}
+
+        {/* Tagesplan CTA */}
+        <DailyPlanCTA />
 
         {/* KI Insights */}
         <InsightsPreview />
