@@ -1,6 +1,6 @@
 # PROJ-8: Backup & Export
 
-**Status:** Approved
+**Status:** Deployed
 **Priority:** P1
 **Created:** 2026-04-23
 
@@ -104,6 +104,14 @@ Keine Critical oder High Bugs gefunden.
 
 **Unit Tests:** 18/18 (export-utils.test.ts) + 13/13 (API route tests) = **31/31 PASS**
 **E2E Tests:** 2/2 ohne Auth + 7 skippen (brauchen TEST_USER Credentials)
+
+---
+
+## Deployment
+
+**Deployed:** 2026-04-25
+**Environment:** Production (Vercel — auto-deploy via `public` remote push)
+**Routes live:** `/api/export/csv`, `/api/export/full`
 
 ---
 
