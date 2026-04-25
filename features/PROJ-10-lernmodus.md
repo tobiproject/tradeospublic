@@ -195,6 +195,63 @@ replay_evaluations, learn_activity
 
 ---
 
+## QA Test Results
+
+**QA Date:** 2026-04-25
+**Status: APPROVED** — No Critical or High bugs.
+
+### Acceptance Criteria Results
+
+| AC | Beschreibung | Ergebnis | Notiz |
+|----|-------------|----------|-------|
+| AC-10.1 | Quiz zeigt Trade ohne Ergebnis (Screenshot + Setup) | ✅ PASS | QuizCard rendert outcome/P&L erst nach reveal |
+| AC-10.2 | Fragen: Guter Einstieg / Was war das Setup / Verbesserung | ✅ PASS | Alle 3 Felder in QuizCard |
+| AC-10.3 | Aufdeckung des Ergebnisses + KI-Kommentar | ✅ PASS | RevealedResult + /api/quiz/answer mit Claude Haiku |
+| AC-10.4 | 5 Trades pro Session, Zusammenfassung mit Match-Rate | ✅ PASS | QuizSession + QuizSummary |
+| AC-10.5 | Nur Trades mit Screenshot für Quiz verwendbar | ✅ PASS | API filtert `.not('screenshot_urls', 'eq', '{}')` |
+| AC-10.6 | Gequizte Trades werden für 30 Tage markiert | ✅ PASS | Answered IDs ausgeschlossen, Fallback auf Wiederholung |
+| AC-10.7 | Trade auswählen → Chat-Interface | ✅ PASS | CoachPage mit Trade-Dropdown |
+| AC-10.8 | KI-Coach startet mit offener Frage | ✅ PASS | System-Prompt: "Starte mit offener Frage, keine Bewertung" |
+| AC-10.9 | Sokrates-Methode, Bewertung erst am Ende | ✅ PASS | System-Prompt instruiert Fragen-Modus |
+| AC-10.10 | Gespräch gespeichert in coach_conversations | ✅ PASS | JSONB messages array, persistiert nach jeder Antwort |
+| AC-10.11 | Max 20 Nachrichten | ✅ PASS | MAX_MESSAGES=20 im Frontend + API erzwungen |
+| AC-10.12 | Replay ohne Ergebnis | ✅ PASS | ReplayPage zeigt keine outcome-Felder vor Submit |
+| AC-10.13 | Hätte ich diesen Trade genommen + Re-Eval SL/TP | ✅ PASS | Would-take toggle + SL/TP Inputs |
+| AC-10.14 | System berechnet Re-Eval-Ergebnis | ✅ PASS | /api/replay berechnet via Risk-Ratio-Skalierung |
+| AC-10.15 | Replay-Ergebnisse aggregiert | ⚠️ PARTIAL | Individuelle Evaluations gespeichert, kein Aggregat-Widget im Dashboard |
+| AC-10.16 | Lern-Dashboard: Quizze, Match-Rate, Coach, Streak | ✅ PASS | Alle 4 Stats-Karten vorhanden |
+| AC-10.17 | Streak 2-Tage-tolerant (Wochenende) | ✅ PASS | `consecutiveMisses >= 2` bricht Streak |
+
+### Bug Report
+
+| # | Severity | Beschreibung |
+|---|----------|-------------|
+| 1 | Low | AC-10.10: Gespräch nicht direkt im Trade-Detail-Bereich verlinkt (Gespräch existiert in DB, nur von /lernmodus/coach zugänglich) |
+| 2 | Low | AC-10.15: Kein aggregiertes Replay-Dashboard-Widget ("Deine Re-Evaluations hätten X% mehr Gewinn") — nur Einzelresultate |
+| 3 | Low | EC-10.3: Wenn alle Trades gequizzt wurden, kein sichtbarer Hinweis im UI dass es eine Wiederholung ist |
+
+### Security Audit
+
+| Check | Status | Notiz |
+|-------|--------|-------|
+| Auth auf /api/quiz/start | ✅ PASS | 401 ohne Session |
+| Auth auf /api/quiz/answer | ✅ PASS | 401 ohne Session |
+| Auth auf /api/coach/conversation | ✅ PASS | 401 ohne Session |
+| Auth auf /api/replay | ✅ PASS | 401 ohne Session |
+| Auth auf /api/learn/stats | ✅ PASS | 401 ohne Session |
+| Cross-Account Zugriff (Quiz) | ✅ PASS | Trade wird gegen user_id + account_id geprüft |
+| Cross-Account Zugriff (Coach) | ✅ PASS | Trade + Conversation gegen user_id verifiziert |
+| Cross-Account Zugriff (Replay) | ✅ PASS | Trade gegen user_id + account_id verifiziert |
+| RLS auf allen 5 neuen Tabellen | ✅ PASS | auth.uid() = user_id Policy auf allen Tabellen |
+| KI-Coach Gesprächslimit | ✅ PASS | 422 wenn > 20 Nachrichten (API) + disabled im Frontend |
+
+### Test Suite
+
+**Unit Tests (Backend):** 6 neue Tests — 6/6 PASS
+**E2E Tests:** 6 unauthenticated (auth protection) + 8 skip (brauchen TEST_USER Credentials)
+
+---
+
 ## Out of Scope
 
 - Live Chart-Replay mit echten historischen Kursdaten (Datenkosten + Komplexität)
