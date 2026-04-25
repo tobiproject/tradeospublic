@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: '/risk', label: 'Risk' },
   { href: '/kalender', label: 'Kalender' },
   { href: '/tagesplan', label: 'Tagesplan' },
+  { href: '/lernmodus', label: 'Lernen' },
   { href: '/accounts', label: 'Konten' },
 ]
 

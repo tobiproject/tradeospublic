@@ -1,6 +1,6 @@
 # PROJ-10: Lernmodus (Replay, Quiz, KI-Coach)
 
-**Status:** Architected
+**Status:** In Progress
 **Priority:** P2
 **Created:** 2026-04-23
 
