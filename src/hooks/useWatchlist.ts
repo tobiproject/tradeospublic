@@ -7,6 +7,9 @@ export interface WatchlistItem {
   symbol: string
   name: string | null
   category: string
+  tick_size: number | null
+  tick_value: number | null
+  point_value: number | null
 }
 
 export function useWatchlist() {
@@ -45,7 +48,25 @@ export function useWatchlist() {
     if (res.ok) setItems(prev => prev.filter(i => i.id !== id))
   }, [])
 
+  const updateItem = useCallback(async (
+    id: string,
+    patch: { tick_size?: number | null; tick_value?: number | null; point_value?: number | null }
+  ) => {
+    const res = await fetch(`/api/watchlist/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setItems(prev => prev.map(i => i.id === id ? { ...i, ...data.item } : i))
+      return { error: null }
+    }
+    const data = await res.json()
+    return { error: data.error ?? 'Fehler beim Aktualisieren' }
+  }, [])
+
   const symbols = items.map(i => i.symbol)
 
-  return { items, symbols, loading, addItem, removeItem, reload: load }
+  return { items, symbols, loading, addItem, removeItem, updateItem, reload: load }
 }

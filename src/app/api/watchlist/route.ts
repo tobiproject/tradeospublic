@@ -8,6 +8,20 @@ const addSchema = z.object({
   category: z.enum(['futures', 'forex', 'crypto', 'stocks', 'indices', 'cfd', 'other']).optional(),
 })
 
+const CME_PRESETS: Record<string, { tick_size: number; tick_value: number; point_value: number }> = {
+  NQ:  { tick_size: 0.25, tick_value: 5.00,  point_value: 20.00 },
+  MNQ: { tick_size: 0.25, tick_value: 0.50,  point_value: 2.00 },
+  ES:  { tick_size: 0.25, tick_value: 12.50, point_value: 50.00 },
+  MES: { tick_size: 0.25, tick_value: 1.25,  point_value: 5.00 },
+  YM:  { tick_size: 1.00, tick_value: 5.00,  point_value: 5.00 },
+  MYM: { tick_size: 1.00, tick_value: 0.50,  point_value: 0.50 },
+  RTY: { tick_size: 0.10, tick_value: 5.00,  point_value: 50.00 },
+  CL:  { tick_size: 0.01, tick_value: 10.00, point_value: 1000.00 },
+  MCL: { tick_size: 0.01, tick_value: 1.00,  point_value: 100.00 },
+  GC:  { tick_size: 0.10, tick_value: 10.00, point_value: 100.00 },
+  MGC: { tick_size: 0.10, tick_value: 1.00,  point_value: 10.00 },
+}
+
 export async function GET() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -33,9 +47,10 @@ export async function POST(req: NextRequest) {
   const parsed = addSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
 
+  const preset = CME_PRESETS[parsed.data.symbol]
   const { data, error } = await supabase
     .from('watchlist_items')
-    .insert({ user_id: user.id, ...parsed.data })
+    .insert({ user_id: user.id, ...parsed.data, ...(preset ?? {}) })
     .select()
     .single()
 

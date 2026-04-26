@@ -22,6 +22,7 @@ import { useTrades, type Trade, type CreateTradeInput } from '@/hooks/useTrades'
 import { addReminder } from '@/components/layout/AnalysisReminderBanner'
 import { AssetCombobox } from '@/components/watchlist/AssetCombobox'
 import { useRiskConfig } from '@/hooks/useRiskConfig'
+import { useWatchlist } from '@/hooks/useWatchlist'
 import { calcRR, calcRiskPercent, calcResultPercent, calcOutcome, validateSLSide } from '@/lib/trade-calculations'
 import { useAccountContext } from '@/contexts/AccountContext'
 import { cn } from '@/lib/utils'
@@ -74,14 +75,15 @@ type FormValues = z.infer<typeof schema>
 
 // ─── Live Calc Preview ───────────────────────────────────────────────────────
 
-function CalcPreview({ values, accountBalance, maxRiskPct, currency }: {
+function CalcPreview({ values, accountBalance, maxRiskPct, currency, pointValue }: {
   values: Partial<Pick<FormValues, 'entry_price' | 'sl_price' | 'tp_price' | 'lot_size' | 'result_currency' | 'direction'>>
   accountBalance: number
   maxRiskPct?: number | null
   currency?: string
+  pointValue?: number | null
 }) {
   const rr = calcRR(values.entry_price, values.sl_price, values.tp_price)
-  const risk = calcRiskPercent(values.entry_price, values.sl_price, values.lot_size, accountBalance)
+  const risk = calcRiskPercent(values.entry_price, values.sl_price, values.lot_size, accountBalance, pointValue)
   const resultPct = calcResultPercent(values.result_currency, accountBalance)
   const outcome = calcOutcome(values.result_currency)
   const slWarning = values.direction && values.entry_price && values.sl_price
@@ -141,6 +143,11 @@ function CalcPreview({ values, accountBalance, maxRiskPct, currency }: {
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span>{slWarning}</span>
         </div>
+      )}
+      {pointValue && (
+        <p className="text-[11px] text-center" style={{ color: 'var(--fg-4)' }}>
+          Futures: ${pointValue}/Punkt
+        </p>
       )}
     </div>
   )
@@ -430,6 +437,7 @@ export function TradeFormSheet({
   const { activeAccount } = useAccountContext()
   const { createTrade, updateTrade, uploadScreenshot, isMutating } = useTrades()
   const { fetchRiskConfig } = useRiskConfig()
+  const { items: watchlistItems } = useWatchlist()
   const [maxRiskPct, setMaxRiskPct] = useState<number | null>(null)
 
   const [existingUrls, setExistingUrls] = useState<string[]>([])
@@ -617,7 +625,7 @@ export function TradeFormSheet({
     onSuccess()
   }
 
-  const watchedValues = form.watch(['entry_price', 'sl_price', 'tp_price', 'lot_size', 'result_currency', 'direction'])
+  const watchedValues = form.watch(['entry_price', 'sl_price', 'tp_price', 'lot_size', 'result_currency', 'direction', 'asset'])
   const liveValues = {
     entry_price: watchedValues[0],
     sl_price: watchedValues[1],
@@ -626,6 +634,11 @@ export function TradeFormSheet({
     result_currency: watchedValues[4],
     direction: watchedValues[5],
   }
+  const liveAsset = watchedValues[6] as string | undefined
+  const activeWatchlistItem = liveAsset
+    ? watchlistItems.find(i => i.symbol === liveAsset.toUpperCase())
+    : undefined
+  const livePointValue = activeWatchlistItem?.point_value ?? null
 
   const notes = form.watch('notes') ?? ''
 
@@ -801,6 +814,7 @@ export function TradeFormSheet({
                   accountBalance={activeAccount?.start_balance ?? 10000}
                   maxRiskPct={maxRiskPct}
                   currency={activeAccount?.currency}
+                  pointValue={livePointValue}
                 />
               </div>
 

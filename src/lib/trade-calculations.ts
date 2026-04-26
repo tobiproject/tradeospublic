@@ -43,11 +43,13 @@ export function calcRiskPercent(
   entry?: number,
   sl?: number,
   lotSize?: number,
-  accountBalance?: number
+  accountBalance?: number,
+  pointValue?: number | null
 ): number | null {
   if (!entry || !sl || !lotSize || !accountBalance || accountBalance === 0) return null
   const slDistance = Math.abs(entry - sl)
-  const riskAmount = slDistance * lotSize
+  // For futures: risk = SL distance in points × point_value × contracts
+  const riskAmount = pointValue ? slDistance * pointValue * lotSize : slDistance * lotSize
   return Math.round((riskAmount / accountBalance) * 10000) / 100
 }
 

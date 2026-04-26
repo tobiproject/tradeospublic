@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, Star, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Star, Loader2, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useWatchlist } from '@/hooks/useWatchlist'
+import { useWatchlist, type WatchlistItem } from '@/hooks/useWatchlist'
 import { cn } from '@/lib/utils'
 
 const CATEGORIES = [
@@ -18,10 +18,28 @@ const CATEGORIES = [
   { value: 'other',    label: 'Sonstige' },
 ]
 
+// CME standard contract specs
+const CME_PRESETS: Record<string, { tick_size: number; tick_value: number; point_value: number; label: string }> = {
+  NQ:  { tick_size: 0.25, tick_value: 5.00,   point_value: 20.00,   label: 'E-mini Nasdaq 100' },
+  MNQ: { tick_size: 0.25, tick_value: 0.50,   point_value: 2.00,    label: 'Micro Nasdaq 100' },
+  ES:  { tick_size: 0.25, tick_value: 12.50,  point_value: 50.00,   label: 'E-mini S&P 500' },
+  MES: { tick_size: 0.25, tick_value: 1.25,   point_value: 5.00,    label: 'Micro S&P 500' },
+  YM:  { tick_size: 1.00, tick_value: 5.00,   point_value: 5.00,    label: 'E-mini Dow' },
+  MYM: { tick_size: 1.00, tick_value: 0.50,   point_value: 0.50,    label: 'Micro Dow' },
+  RTY: { tick_size: 0.10, tick_value: 5.00,   point_value: 50.00,   label: 'E-mini Russell 2000' },
+  CL:  { tick_size: 0.01, tick_value: 10.00,  point_value: 1000.00, label: 'Crude Oil' },
+  MCL: { tick_size: 0.01, tick_value: 1.00,   point_value: 100.00,  label: 'Micro Crude Oil' },
+  GC:  { tick_size: 0.10, tick_value: 10.00,  point_value: 100.00,  label: 'Gold' },
+  MGC: { tick_size: 0.10, tick_value: 1.00,   point_value: 10.00,   label: 'Micro Gold' },
+}
+
 const QUICK_ADD: { symbol: string; name: string; category: string }[] = [
   { symbol: 'NQ',      name: 'Nasdaq 100 Futures',     category: 'futures' },
   { symbol: 'ES',      name: 'S&P 500 Futures',        category: 'futures' },
   { symbol: 'YM',      name: 'Dow Jones Futures',      category: 'futures' },
+  { symbol: 'MNQ',     name: 'Micro Nasdaq 100',       category: 'futures' },
+  { symbol: 'MES',     name: 'Micro S&P 500',          category: 'futures' },
+  { symbol: 'MYM',     name: 'Micro Dow Jones',        category: 'futures' },
   { symbol: 'RTY',     name: 'Russell 2000 Futures',   category: 'futures' },
   { symbol: 'CL',      name: 'Crude Oil Futures',      category: 'futures' },
   { symbol: 'GC',      name: 'Gold Futures',           category: 'futures' },
@@ -40,8 +58,123 @@ const QUICK_ADD: { symbol: string; name: string; category: string }[] = [
   { symbol: 'US500',   name: 'S&P 500 CFD',            category: 'cfd' },
 ]
 
+// ─── Futures Row with inline tick editor ─────────────────────────────────────
+
+function FuturesTickEditor({ item, onSave }: {
+  item: WatchlistItem
+  onSave: (patch: { tick_size: number | null; tick_value: number | null; point_value: number | null }) => Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
+  const [tickSize, setTickSize] = useState(String(item.tick_size ?? ''))
+  const [tickValue, setTickValue] = useState(String(item.tick_value ?? ''))
+  const [pointValue, setPointValue] = useState(String(item.point_value ?? ''))
+  const [saving, setSaving] = useState(false)
+
+  const preset = CME_PRESETS[item.symbol]
+
+  const applyPreset = () => {
+    if (!preset) return
+    setTickSize(String(preset.tick_size))
+    setTickValue(String(preset.tick_value))
+    setPointValue(String(preset.point_value))
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    await onSave({
+      tick_size: tickSize ? parseFloat(tickSize) : null,
+      tick_value: tickValue ? parseFloat(tickValue) : null,
+      point_value: pointValue ? parseFloat(pointValue) : null,
+    })
+    setSaving(false)
+    setOpen(false)
+  }
+
+  return (
+    <div className="w-full">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded transition-colors"
+        style={{
+          color: item.point_value ? 'var(--brand-blue)' : 'var(--fg-4)',
+          background: item.point_value ? 'rgba(41,98,255,0.1)' : 'transparent',
+        }}
+      >
+        {item.point_value ? `$${item.point_value}/Pt` : 'Kontraktwert'}
+        {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+      </button>
+
+      {open && (
+        <div
+          className="mt-2 rounded-lg p-3 space-y-3"
+          style={{ background: 'var(--bg-1)', border: '1px solid var(--border-raw)' }}
+        >
+          {preset && (
+            <button
+              onClick={applyPreset}
+              className="text-[11px] px-2 py-1 rounded flex items-center gap-1"
+              style={{ background: 'rgba(41,98,255,0.12)', color: 'var(--brand-blue)' }}
+            >
+              <Check className="h-3 w-3" />
+              CME-Standard laden ({preset.label}: ${preset.point_value}/Pt)
+            </button>
+          )}
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <p className="text-[10px] mb-1" style={{ color: 'var(--fg-4)' }}>Tick-Größe</p>
+              <Input
+                value={tickSize}
+                onChange={e => setTickSize(e.target.value)}
+                placeholder="0.25"
+                className="h-7 text-xs"
+              />
+            </div>
+            <div>
+              <p className="text-[10px] mb-1" style={{ color: 'var(--fg-4)' }}>Tick-Wert ($)</p>
+              <Input
+                value={tickValue}
+                onChange={e => setTickValue(e.target.value)}
+                placeholder="5.00"
+                className="h-7 text-xs"
+              />
+            </div>
+            <div>
+              <p className="text-[10px] mb-1" style={{ color: 'var(--fg-4)' }}>$/Punkt</p>
+              <Input
+                value={pointValue}
+                onChange={e => setPointValue(e.target.value)}
+                placeholder="20.00"
+                className="h-7 text-xs"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setOpen(false)}
+              className="text-xs px-2 py-1 rounded"
+              style={{ color: 'var(--fg-4)' }}
+            >
+              Abbrechen
+            </button>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="h-7 px-3 text-xs rounded"
+              style={{ background: 'var(--brand-blue)', color: '#fff', border: 'none' }}
+            >
+              {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Speichern'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 export default function WatchlistPage() {
-  const { items, loading, addItem, removeItem } = useWatchlist()
+  const { items, loading, addItem, removeItem, updateItem } = useWatchlist()
   const [symbol, setSymbol] = useState('')
   const [name, setName] = useState('')
   const [category, setCategory] = useState('futures')
@@ -60,13 +193,13 @@ export default function WatchlistPage() {
     setAdding(true)
     setError(null)
     const result = await addItem(s, n, c)
-    setAdding(false)
-    if (result.error) {
-      setError(result.error)
-    } else {
+    if (result.error === null) {
       setSymbol('')
       setName('')
+    } else {
+      setError(result.error)
     }
+    setAdding(false)
   }
 
   const handleRemove = async (id: string) => {
@@ -173,7 +306,7 @@ export default function WatchlistPage() {
       {/* Current Watchlist */}
       <Section
         title={`Deine Watchlist${items.length > 0 ? ` (${items.length})` : ''}`}
-        subtitle="Sortiert nach Kategorie"
+        subtitle="Sortiert nach Kategorie — Futures zeigen Kontraktwert für Risikocalc"
       >
         {loading ? (
           <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--fg-4)' }}>
@@ -201,35 +334,47 @@ export default function WatchlistPage() {
                   {group.items.map(item => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between rounded px-3 py-2"
+                      className="rounded px-3 py-2"
                       style={{ background: 'var(--bg-3)' }}
                     >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="ticker text-sm font-semibold"
-                          style={{ color: 'var(--fg-1)' }}
-                        >
-                          {item.symbol}
-                        </span>
-                        {item.name && (
-                          <span className="text-xs" style={{ color: 'var(--fg-4)' }}>
-                            {item.name}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="ticker text-sm font-semibold"
+                            style={{ color: 'var(--fg-1)' }}
+                          >
+                            {item.symbol}
                           </span>
-                        )}
+                          {item.name && (
+                            <span className="text-xs" style={{ color: 'var(--fg-4)' }}>
+                              {item.name}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleRemove(item.id)}
+                          disabled={removingId === item.id}
+                          className="rounded p-1 transition-colors"
+                          style={{ color: 'var(--fg-4)' }}
+                          onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--short)')}
+                          onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg-4)')}
+                        >
+                          {removingId === item.id
+                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            : <Trash2 className="h-3.5 w-3.5" />
+                          }
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleRemove(item.id)}
-                        disabled={removingId === item.id}
-                        className="rounded p-1 transition-colors"
-                        style={{ color: 'var(--fg-4)' }}
-                        onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--short)')}
-                        onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg-4)')}
-                      >
-                        {removingId === item.id
-                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          : <Trash2 className="h-3.5 w-3.5" />
-                        }
-                      </button>
+
+                      {/* Futures tick editor */}
+                      {item.category === 'futures' && (
+                        <div className="mt-1.5">
+                          <FuturesTickEditor
+                            item={item}
+                            onSave={patch => updateItem(item.id, patch).then(() => {})}
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
