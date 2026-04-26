@@ -25,6 +25,24 @@ const EMPTY: Strategy = {
   instruments: [],
 }
 
+const EXAMPLE_STRATEGY: Strategy = {
+  name: 'NQ/ES Momentum Breakout',
+  description: 'Intraday Momentum-Strategie auf E-Mini Futures (NQ & ES). Ich trade ausschließlich in der ersten Handelsstunde (9:30–11:00 ET) und in der Nachmittagssession (14:00–16:00 ET). Einstiege erfolgen nach bestätigten Breakouts aus dem Opening Range oder nach Pullbacks an wichtige VWAP-Levels. Kein Trading gegen den Tagestrend.',
+  rules: [
+    'Kein Trade vor 9:45 ET — Opening-Volatilität abwarten',
+    'Nur in Trendrichtung traden — H1 Trend bestimmt Bias für den Tag',
+    'Entry nur nach Konsolidierung und Volumen-Bestätigung (kein Thin-Air-Entry)',
+    'Stop Loss immer hinter letztem Swing High/Low — kein fester Pip-Stop',
+    'Maximales Risiko pro Trade: 1% des Kontostands (ca. $100 bei $10k)',
+    'Kein Trade nach 2 aufeinanderfolgenden Verlusten — Pause einlegen',
+    'Nachrichten-Events (FOMC, NFP, CPI) meiden — 30min vor und nach',
+    'Tagesgewinnlimit: +$300 — danach Bildschirm aus',
+    'Tagesverlustlimit: -$200 — danach kein weiterer Trade',
+  ],
+  preferred_timeframes: ['5m', '15m', '1h'],
+  instruments: ['NQ', 'ES'],
+}
+
 const TIMEFRAME_OPTIONS = ['1m', '5m', '15m', '30m', '1h', '4h', 'D', 'W']
 
 export default function EinstellungenPage() {
@@ -116,15 +134,25 @@ export default function EinstellungenPage() {
             Definiere deine Trading-Strategie — die KI nutzt dieses Profil für alle Analysen.
           </p>
         </div>
-        <Button
-          onClick={save}
-          disabled={saving}
-          className="h-8 px-4 text-[13px] font-semibold rounded"
-          style={{ background: 'var(--brand-blue)', color: '#fff', border: 'none' }}
-        >
-          {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : saved ? <Check className="h-4 w-4 mr-2" /> : null}
-          {saved ? 'Gespeichert' : 'Speichern'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setStrategy(EXAMPLE_STRATEGY)}
+            className="h-8 px-3 text-[13px] font-semibold rounded"
+            style={{ background: 'var(--bg-3)', color: 'var(--fg-2)', border: '1px solid var(--border-raw)' }}
+            title="Befüllt das Formular mit einer Beispielstrategie — du kannst sie danach anpassen oder löschen"
+          >
+            Beispiel laden
+          </Button>
+          <Button
+            onClick={save}
+            disabled={saving}
+            className="h-8 px-4 text-[13px] font-semibold rounded"
+            style={{ background: 'var(--brand-blue)', color: '#fff', border: 'none' }}
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : saved ? <Check className="h-4 w-4 mr-2" /> : null}
+            {saved ? 'Gespeichert' : 'Speichern'}
+          </Button>
+        </div>
       </div>
 
       {loading ? (
