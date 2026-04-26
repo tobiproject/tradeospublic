@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { AccountProvider } from '@/contexts/AccountContext'
-import { AppNav } from '@/components/layout/AppNav'
+import { AppSidebar } from '@/components/layout/AppSidebar'
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createServerSupabaseClient()
@@ -16,10 +16,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <AccountProvider>
-      <div className="min-h-screen bg-background flex flex-col">
-        <AppNav />
-        <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
-          {children}
+      <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-0)' }}>
+        <AppSidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="px-6 py-5 max-w-[1280px]">
+            {children}
+          </div>
         </main>
       </div>
     </AccountProvider>

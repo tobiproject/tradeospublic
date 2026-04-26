@@ -1,85 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── TradeOS Design Tokens (dark-first, TradingView DNA) ─────────────────── */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+    /* shadcn vars mapped to TradeOS dark palette */
+    --background: 225 11% 6%;         /* #0C0D0F — page */
+    --foreground: 0 0% 98%;           /* #FAFAFA */
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+    --card: 220 14% 12%;              /* #1A1D22 */
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
+
+    --popover: 220 14% 12%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
+
+    --primary: 224 100% 57%;          /* #2962FF — brand blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 218 13% 16%;         /* #23272E */
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+
+    --muted: 218 13% 16%;
+    --muted-foreground: 215 6% 51%;   /* #787E87 */
+
+    --accent: 218 13% 16%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+
+    --destructive: 355 88% 58%;       /* #F23645 — short/loss red */
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+
+    --border: 218 13% 18%;            /* ~rgba(255,255,255,0.08) on dark */
+    --input: 218 13% 18%;
+    --ring: 224 100% 57%;             /* focus ring = brand blue */
+
+    --radius: 0.375rem;               /* 6px default — cards/panels */
+
+    /* chart colors: TradingView semantic */
+    --chart-1: 169 91% 32%;           /* #089981 long/win */
+    --chart-2: 355 88% 58%;           /* #F23645 short/loss */
+    --chart-3: 224 100% 57%;          /* #2962FF info/neutral */
+    --chart-4: 37 100% 50%;           /* #FF9800 warn */
+    --chart-5: 187 100% 41%;          /* #00BCD4 accent turquoise */
+
+    /* sidebar vars */
+    --sidebar-background: 225 14% 9%;  /* #131519 */
+    --sidebar-foreground: 0 0% 71%;    /* #B4B8BF */
+    --sidebar-primary: 224 100% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 218 13% 16%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 218 13% 18%;
+    --sidebar-ring: 224 100% 57%;
+
+    /* TradeOS raw tokens (for direct use in components) */
+    --brand-blue:       #2962FF;
+    --brand-blue-soft:  rgba(41,98,255,0.14);
+    --long:             #089981;
+    --long-soft:        rgba(8,153,129,0.14);
+    --short:            #F23645;
+    --short-soft:       rgba(242,54,69,0.14);
+    --warn:             #FF9800;
+    --warn-soft:        rgba(255,152,0,0.14);
+    --bg-0:             #0C0D0F;
+    --bg-1:             #131519;
+    --bg-2:             #1A1D22;
+    --bg-3:             #23272E;
+    --bg-4:             #2F343C;
+    --fg-1:             #FAFAFA;
+    --fg-2:             #B4B8BF;
+    --fg-3:             #787E87;
+    --fg-4:             #4A4F57;
+    --border-raw:       rgba(255,255,255,0.08);
+    --border-strong:    rgba(255,255,255,0.14);
+    --elev-2:           0 4px 16px rgba(0,0,0,0.32), 0 0 0 1px rgba(255,255,255,0.06);
+    --elev-3:           0 24px 48px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,255,255,0.08);
   }
 }
 
+/* ─── Base styles ─────────────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', 'Trebuchet MS', ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  h1 { font-size: 32px; letter-spacing: -0.02em; }
+  h2 { font-size: 24px; letter-spacing: -0.015em; }
+  h3 { font-size: 20px; }
+  h4 { font-size: 16px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 8px; border: 2px solid var(--bg-0); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--fg-4); }
+}
+
+/* ─── Utility classes ─────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Eyebrow: small all-caps section label */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Ticker: mono uppercase */
+  .ticker {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Num: tabular mono */
+  .num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+
+  /* Metric: large display number */
+  .metric {
+    font-family: 'Manrope', ui-sans-serif, sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
+  }
+
+  /* Semantic color helpers */
+  .text-long  { color: var(--long); }
+  .text-short { color: var(--short); }
+  .bg-long-soft  { background-color: var(--long-soft); }
+  .bg-short-soft { background-color: var(--short-soft); }
+  .bg-brand-soft { background-color: var(--brand-blue-soft); }
 }

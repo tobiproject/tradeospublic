@@ -1,20 +1,23 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10.5px] font-semibold tracking-wide transition-colors",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+        default:     "border-transparent bg-primary/14 text-primary",
+        secondary:   "border border-border text-muted-foreground",
+        destructive: "border-transparent bg-destructive/14 text-destructive",
+        outline:     "border border-border text-foreground",
+        /* TradeOS semantic */
+        long:  "border-transparent text-[#089981]  bg-[rgba(8,153,129,0.14)]",
+        short: "border-transparent text-[#F23645]  bg-[rgba(242,54,69,0.14)]",
+        win:   "border-transparent text-[#089981]  bg-[rgba(8,153,129,0.14)]",
+        loss:  "border-transparent text-[#F23645]  bg-[rgba(242,54,69,0.14)]",
+        info:  "border-transparent text-[#2962FF]  bg-[rgba(41,98,255,0.14)]",
+        warn:  "border-transparent text-[#FF9800]  bg-[rgba(255,152,0,0.14)]",
       },
     },
     defaultVariants: {

@@ -1,39 +1,45 @@
 'use client'
 
 import { TrendingUp, TrendingDown, CalendarDays, CalendarRange, Target, BarChart2 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { DashboardMetrics } from '@/hooks/useDashboardMetrics'
 
 interface KpiCardProps {
-  icon: React.ReactNode
   label: string
   value: React.ReactNode
   sub?: string
-  colorClass?: string
+  valueClass?: string
 }
 
-function KpiCard({ icon, label, value, sub, colorClass }: KpiCardProps) {
+function KpiCard({ label, value, sub, valueClass }: KpiCardProps) {
   return (
-    <Card className="border-border/60">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 text-muted-foreground mb-2">
-          {icon}
-          <span className="text-xs font-medium">{label}</span>
+    <div
+      className="rounded-lg p-4"
+      style={{ background: 'var(--bg-2)', border: '1px solid var(--border-raw)' }}
+    >
+      <div className="eyebrow mb-2">{label}</div>
+      <div className={cn('metric truncate', valueClass ?? '')} style={{ color: 'var(--fg-1)' }}>
+        {value}
+      </div>
+      {sub && (
+        <div className="num mt-1 text-xs" style={{ color: 'var(--fg-3)' }}>
+          {sub}
         </div>
-        <p className={cn('text-xl font-bold tabular-nums truncate', colorClass ?? 'text-foreground')}>
-          {value}
-        </p>
-        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   )
 }
 
 function pnlColor(val: number) {
-  if (val > 0) return 'text-emerald-400'
-  if (val < 0) return 'text-red-400'
-  return 'text-muted-foreground'
+  if (val > 0) return 'text-long'
+  if (val < 0) return 'text-short'
+  return ''
+}
+
+function pnlStyle(val: number): React.CSSProperties {
+  if (val > 0) return { color: 'var(--long)' }
+  if (val < 0) return { color: 'var(--short)' }
+  return { color: 'var(--fg-3)' }
 }
 
 function formatPnl(val: number) {
@@ -45,67 +51,55 @@ interface Props {
 }
 
 export function KpiRow({ metrics }: Props) {
-  const ddColor = metrics.drawdownPct > 10
-    ? 'text-red-400'
+  const ddStyle: React.CSSProperties = metrics.drawdownPct > 10
+    ? { color: 'var(--short)' }
     : metrics.drawdownPct > 5
-    ? 'text-amber-400'
-    : 'text-emerald-400'
+    ? { color: 'var(--warn)' }
+    : { color: 'var(--long)' }
 
   const todayValue = metrics.todayTradeCount === 0
-    ? <span className="text-sm text-muted-foreground font-normal">Noch keine Trades heute</span>
+    ? <span className="text-sm font-normal" style={{ color: 'var(--fg-3)' }}>Keine Trades heute</span>
     : (
-      <span className={pnlColor(metrics.todayPnl)}>
+      <span style={pnlStyle(metrics.todayPnl)}>
         {formatPnl(metrics.todayPnl)}
-        <span className="text-sm font-normal ml-1">
-          ({metrics.todayPnl >= 0 ? '+' : ''}{metrics.todayPnlPct.toFixed(2)}%)
-        </span>
       </span>
     )
 
   const winrateValue = metrics.winRate === null
-    ? <span className="text-sm text-muted-foreground font-normal">Keine Daten</span>
+    ? <span className="text-sm font-normal" style={{ color: 'var(--fg-3)' }}>—</span>
     : `${metrics.winRate.toFixed(1)}%`
 
   const rrValue = metrics.avgRR === null
-    ? <span className="text-sm text-muted-foreground font-normal">Keine Daten</span>
+    ? <span className="text-sm font-normal" style={{ color: 'var(--fg-3)' }}>—</span>
     : `1:${metrics.avgRR.toFixed(2)}`
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <KpiCard
-        icon={<TrendingUp className="h-4 w-4" />}
         label="Tages-P&L"
         value={todayValue}
       />
       <KpiCard
-        icon={<CalendarDays className="h-4 w-4" />}
         label="Wochen-P&L"
-        value={formatPnl(metrics.weekPnl)}
-        colorClass={pnlColor(metrics.weekPnl)}
+        value={<span style={pnlStyle(metrics.weekPnl)}>{formatPnl(metrics.weekPnl)}</span>}
       />
       <KpiCard
-        icon={<CalendarRange className="h-4 w-4" />}
         label="Monats-P&L"
-        value={formatPnl(metrics.monthPnl)}
-        colorClass={pnlColor(metrics.monthPnl)}
+        value={<span style={pnlStyle(metrics.monthPnl)}>{formatPnl(metrics.monthPnl)}</span>}
       />
       <KpiCard
-        icon={<Target className="h-4 w-4" />}
-        label="Winrate"
+        label="Win Rate"
         value={winrateValue}
-        sub={metrics.winRate !== null ? `${metrics.allTradeCount} Trades gesamt` : undefined}
+        sub={metrics.winRate !== null ? `${metrics.allTradeCount} Trades` : undefined}
       />
       <KpiCard
-        icon={<BarChart2 className="h-4 w-4" />}
-        label="Ø Risk-Reward"
+        label="Ø Risk/Reward"
         value={rrValue}
       />
       <KpiCard
-        icon={<TrendingDown className="h-4 w-4" />}
         label="Drawdown"
-        value={`${metrics.drawdownPct.toFixed(2)}%`}
-        colorClass={ddColor}
-        sub={metrics.drawdownPct > 10 ? '⚠ Kritisch' : metrics.drawdownPct > 5 ? '⚠ Erhöht' : undefined}
+        value={<span style={ddStyle}>{metrics.drawdownPct.toFixed(2)}%</span>}
+        sub={metrics.drawdownPct > 10 ? 'Kritisch' : metrics.drawdownPct > 5 ? 'Erhöht' : undefined}
       />
     </div>
   )

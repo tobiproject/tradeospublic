@@ -70,22 +70,32 @@ export function DashboardContent() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Kein aktives Konto</p>
+          <div className="eyebrow mb-1">Dashboard</div>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Manrope, sans-serif' }}>Kein aktives Konto</h1>
         </div>
-        <p className="text-muted-foreground text-sm border border-dashed border-border/60 rounded-lg p-8 text-center">
+        <p className="text-sm p-8 text-center rounded-lg" style={{ color: 'var(--fg-3)', border: '1px dashed var(--border-raw)' }}>
           Bitte wähle ein aktives Konto aus, um dein Dashboard zu sehen.
         </p>
       </div>
     )
   }
 
+  const now = new Date()
+  const greeting = now.getHours() < 12 ? 'Guten Morgen' : now.getHours() < 18 ? 'Guten Tag' : 'Guten Abend'
+
   return (
     <>
       <div className="space-y-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Konto: {activeAccount.name}</p>
+        <div className="flex items-end justify-between">
+          <div>
+            <div className="eyebrow mb-1">{now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Manrope, sans-serif' }}>
+              {greeting}.
+            </h1>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--fg-3)' }}>
+              {activeAccount.name}
+            </p>
+          </div>
         </div>
 
         {/* Alerts */}
