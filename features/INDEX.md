@@ -24,20 +24,18 @@
 | PROJ-8 | Backup & Export | Deployed | [PROJ-8-backup-export.md](PROJ-8-backup-export.md) | 2026-04-23 |
 | PROJ-9 | Automatisierung & Smart Features | Deployed | [PROJ-9-automatisierung.md](PROJ-9-automatisierung.md) | 2026-04-23 |
 | PROJ-10 | Lernmodus (Replay, Quiz, KI-Coach) | Deployed | [PROJ-10-lernmodus.md](PROJ-10-lernmodus.md) | 2026-04-23 |
-
 | PROJ-11 | Trading Knowledge Base | Planned | [PROJ-11-knowledge-base.md](PROJ-11-knowledge-base.md) | 2026-04-25 |
-| PROJ-12 | Morning Briefing | Deployed | — | 2026-04-26 |
-| PROJ-13 | Notes AI-Rewrite (Wispr Flow) | Deployed | — | 2026-04-26 |
-| PROJ-14 | Trade Analysis Reminder | Deployed | — | 2026-04-26 |
-| PROJ-15 | Trade Simulation / True RRR | Deployed | — | 2026-04-26 |
-| PROJ-16 | Strategie-Profil (Strategy Storage) | Deployed | — | 2026-04-26 |
-| PROJ-17 | Design System (TradingView DNA) | Deployed | — | 2026-04-26 |
-| PROJ-18 | Draggable Sidebar + Tagesplan Indicator | Deployed | — | 2026-04-26 |
-
-| PROJ-19 | Account Type (Futures/CFD/Prop/Eigenhandel) | Deployed | — | 2026-04-26 |
-| PROJ-20 | Absolute Risk Display (€/$) | Deployed | — | 2026-04-26 |
-| PROJ-21 | Personalized Greeting (display_name) | Deployed | — | 2026-04-26 |
-| PROJ-22 | Weekly AI Prep | Deployed | — | 2026-04-26 |
+| PROJ-12 | Morning Briefing | Deployed | [PROJ-12-morning-briefing.md](PROJ-12-morning-briefing.md) | 2026-04-26 |
+| PROJ-13 | Notes AI-Rewrite (Wispr Flow) | Deployed | [PROJ-13-notes-ai-rewrite.md](PROJ-13-notes-ai-rewrite.md) | 2026-04-26 |
+| PROJ-14 | Trade Analysis Reminder | Deployed | [PROJ-14-analysis-reminder.md](PROJ-14-analysis-reminder.md) | 2026-04-26 |
+| PROJ-15 | Trade Simulation / True RRR | Deployed | [PROJ-15-trade-simulation.md](PROJ-15-trade-simulation.md) | 2026-04-26 |
+| PROJ-16 | Strategie-Profil (Strategy Storage) | Deployed | [PROJ-16-strategy-storage.md](PROJ-16-strategy-storage.md) | 2026-04-26 |
+| PROJ-17 | Design System (TradingView DNA) | Deployed | [PROJ-17-design-system.md](PROJ-17-design-system.md) | 2026-04-26 |
+| PROJ-18 | Draggable Sidebar + Tagesplan Indicator | Deployed | [PROJ-18-sidebar-ux.md](PROJ-18-sidebar-ux.md) | 2026-04-26 |
+| PROJ-19 | Account Type (Futures/CFD/Prop/Eigenhandel) | Deployed | [PROJ-19-account-type.md](PROJ-19-account-type.md) | 2026-04-26 |
+| PROJ-20 | Absolute Risk Display (EUR/USD) | Deployed | [PROJ-20-absolute-risk-display.md](PROJ-20-absolute-risk-display.md) | 2026-04-26 |
+| PROJ-21 | Personalized Greeting (display_name) | Deployed | [PROJ-21-personalized-greeting.md](PROJ-21-personalized-greeting.md) | 2026-04-26 |
+| PROJ-22 | Weekly AI Prep | Deployed | [PROJ-22-weekly-prep.md](PROJ-22-weekly-prep.md) | 2026-04-26 |
 
 <!-- Add features above this line -->
 
@@ -54,4 +52,7 @@ Phase 2 — Intelligence
 
 Phase 3 — Power Features
   PROJ-9 → PROJ-10
+
+Phase 4 — UX & AI Enhancements
+  PROJ-12..22
 ```
