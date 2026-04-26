@@ -34,10 +34,9 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'performance', href: '/performance', label: 'Performance', icon: TrendingUp,      kbd: 'G P' },
   { id: 'analysen',    href: '/analysen',    label: 'Analysen',    icon: Brain,           kbd: 'G A' },
   { id: 'risk',        href: '/risk',        label: 'Risk',        icon: ShieldCheck,     kbd: 'G R' },
-  { id: 'kalender',      href: '/kalender',      label: 'Kalender',    icon: CalendarDays,  kbd: null  },
-  { id: 'tagesplan',    href: '/tagesplan',    label: 'Tagesplan',   icon: ClipboardList, kbd: null  },
-  { id: 'lernmodus',   href: '/lernmodus',    label: 'Lernen',      icon: GraduationCap, kbd: null  },
-  { id: 'einstellungen', href: '/einstellungen', label: 'Einstellungen', icon: Settings,  kbd: null  },
+  { id: 'kalender',  href: '/kalender',  label: 'Kalender', icon: CalendarDays,  kbd: null },
+  { id: 'tagesplan', href: '/tagesplan', label: 'Tagesplan', icon: ClipboardList, kbd: null },
+  { id: 'lernmodus', href: '/lernmodus', label: 'Lernen',    icon: GraduationCap, kbd: null },
 ]
 
 const STORAGE_KEY = 'tradeos-sidebar-order'
@@ -258,22 +257,40 @@ export function AppSidebar() {
         <div className="px-2 py-1">
           <AccountSwitcher />
         </div>
-        <button
-          onClick={logout}
-          className="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-[13px] w-full text-left transition-colors duration-100"
-          style={{ color: 'var(--fg-3)', background: 'transparent' }}
-          onMouseEnter={e => {
-            ;(e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'
-            ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-1)'
-          }}
-          onMouseLeave={e => {
-            ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-            ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-3)'
-          }}
-        >
-          <LogOut className="h-4 w-4" />
-          Abmelden
-        </button>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/einstellungen"
+            className="flex flex-1 items-center gap-2.5 px-2.5 py-1.5 rounded text-[13px] transition-colors duration-100"
+            style={{ color: 'var(--fg-3)', background: 'transparent' }}
+            onMouseEnter={e => {
+              ;(e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'
+              ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-1)'
+            }}
+            onMouseLeave={e => {
+              ;(e.currentTarget as HTMLElement).style.background = 'transparent'
+              ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-3)'
+            }}
+          >
+            <Settings className="h-4 w-4 shrink-0" />
+            Einstellungen
+          </Link>
+          <button
+            onClick={logout}
+            title="Abmelden"
+            className="flex items-center justify-center w-8 h-8 rounded transition-colors duration-100 shrink-0"
+            style={{ color: 'var(--fg-3)', background: 'transparent' }}
+            onMouseEnter={e => {
+              ;(e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'
+              ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-1)'
+            }}
+            onMouseLeave={e => {
+              ;(e.currentTarget as HTMLElement).style.background = 'transparent'
+              ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-3)'
+            }}
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </aside>
   )
