@@ -189,6 +189,7 @@ export default function RoadmapPage() {
   const [generatedAt, setGeneratedAt] = useState<string | null>(null)
   const [hasStrategy, setHasStrategy] = useState(true)
   const [tradeCount, setTradeCount] = useState(0)
+  const [isStale, setIsStale] = useState(false)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -201,6 +202,7 @@ export default function RoadmapPage() {
     setGeneratedAt(data.generated_at)
     setHasStrategy(data.has_strategy ?? true)
     setTradeCount(data.trade_count ?? 0)
+    setIsStale(data.is_stale ?? false)
     setLoading(false)
   }, [])
 
@@ -218,6 +220,7 @@ export default function RoadmapPage() {
       setGeneratedAt(new Date().toISOString())
       setHasStrategy(data.has_strategy ?? true)
       setTradeCount(data.trade_count ?? 0)
+      setIsStale(false)
     }
     setGenerating(false)
   }
@@ -266,6 +269,24 @@ export default function RoadmapPage() {
             </p>
           </div>
         </Link>
+      )}
+
+      {/* Staleness banner */}
+      {isStale && roadmap && (
+        <button
+          onClick={generate}
+          disabled={generating}
+          className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-opacity hover:opacity-80"
+          style={{ background: 'rgba(41,98,255,0.08)', border: '1px solid rgba(41,98,255,0.25)' }}
+        >
+          <RefreshCw className="h-4 w-4 shrink-0" style={{ color: 'var(--brand-blue)' }} />
+          <div className="flex-1">
+            <p className="text-sm font-semibold" style={{ color: 'var(--brand-blue)' }}>Roadmap veraltet</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--fg-3)' }}>
+              Neue Trades oder Strategie-Änderungen seit der letzten Analyse. Jetzt neu analysieren →
+            </p>
+          </div>
+        </button>
       )}
 
       {error && (

@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
 
   // Extract text from PDF
   try {
-    // Dynamic import prevents DOMMatrix errors during build-time module evaluation
+    // Use internal lib path to skip test fixture loading (avoids DOMMatrix/filesystem errors in serverless)
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require('pdf-parse')
+    const pdfParse = require('pdf-parse/lib/pdf-parse')
     const parsed = await pdfParse(Buffer.from(bytes))
     const text = parsed.text?.trim() ?? ''
 

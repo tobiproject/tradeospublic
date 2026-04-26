@@ -110,16 +110,28 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const [{ data }, { data: strategy }, { count }] = await Promise.all([
+  const [{ data }, { data: strategy }, { count }, { data: latestTrade }, { data: latestStrategy }] = await Promise.all([
     supabase.from('user_roadmap').select('data, generated_at').eq('user_id', user.id).single(),
     supabase.from('user_strategy').select('name').eq('user_id', user.id).maybeSingle(),
     supabase.from('trades').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+    supabase.from('trades').select('created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('user_strategy').select('updated_at').eq('user_id', user.id).maybeSingle(),
   ])
+
+  // Staleness: roadmap is outdated if trades or strategy were changed after last analysis
+  const generatedAt = data?.generated_at ?? null
+  let isStale = false
+  if (generatedAt && data?.data) {
+    const gen = new Date(generatedAt).getTime()
+    if (latestTrade?.created_at && new Date(latestTrade.created_at).getTime() > gen) isStale = true
+    if (latestStrategy?.updated_at && new Date(latestStrategy.updated_at).getTime() > gen) isStale = true
+  }
 
   return NextResponse.json({
     roadmap: data?.data ?? null,
-    generated_at: data?.generated_at ?? null,
+    generated_at: generatedAt,
     has_strategy: !!strategy?.name,
     trade_count: count ?? 0,
+    is_stale: isStale,
   })
 }

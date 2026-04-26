@@ -72,7 +72,7 @@ export function QuizSession() {
         <div>
           <h2 className="text-xl font-semibold">Quiz-Modus</h2>
           <p className="text-muted-foreground mt-1 max-w-sm mx-auto">
-            Du bekommst 5 vergangene Trades ohne Ergebnis gezeigt. Bewerte jeden Trade — danach siehst du was wirklich passiert ist.
+            Du bekommst vergangene Trades ohne Ergebnis gezeigt. Bewerte jeden Trade — danach siehst du was wirklich passiert ist.
           </p>
         </div>
         <Button onClick={startQuiz} size="lg" className="mt-2">
