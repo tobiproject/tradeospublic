@@ -12,6 +12,8 @@ import { TradeFormSheet } from './TradeFormSheet'
 import { TradeDetailSheet } from './TradeDetailSheet'
 import { TradeDeleteDialog } from './TradeDeleteDialog'
 import { useAiAnalysis } from '@/hooks/useAiAnalysis'
+import { useMilestones } from '@/hooks/useMilestones'
+import { MilestoneCelebration } from './MilestoneCelebration'
 import { toast } from 'sonner'
 import { ExportMenu } from '@/components/export/ExportMenu'
 import { PdfReportButton } from '@/components/export/PdfReportButton'
@@ -53,6 +55,8 @@ export function JournalContent() {
   const { activeAccount } = useAccountContext()
   const { fetchTrades, deleteTrade, getUniqueValues, isMutating } = useTrades()
   const { triggerAnalysis } = useAiAnalysis()
+  const { checkMilestones } = useMilestones()
+  const [milestone, setMilestone] = useState<number | null>(null)
 
   const [tradesPage, setTradesPage] = useState<TradesPage | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -154,7 +158,16 @@ export function JournalContent() {
   const handleFormSuccess = (newTradeId?: string) => {
     setRefreshKey(k => k + 1)
     // Auto-trigger KI analysis for newly created trades (AC-4.1)
-    if (newTradeId) triggerAnalysis(newTradeId)
+    if (newTradeId) {
+      triggerAnalysis(newTradeId)
+      // Check milestone after a short delay to let tradesPage refresh settle
+      setTimeout(() => {
+        fetchTrades({}, 1).then(p => {
+          const hit = checkMilestones(p.total)
+          if (hit) setMilestone(hit)
+        })
+      }, 800)
+    }
     // Refresh suggestions after new trade
     if (activeAccount) {
       Promise.all([
@@ -245,6 +258,11 @@ export function JournalContent() {
         onOpenChange={open => { if (!open) setDeletingTrade(null) }}
         onConfirm={handleDeleteConfirm}
         isDeleting={isMutating}
+      />
+
+      <MilestoneCelebration
+        milestone={milestone}
+        onClose={() => setMilestone(null)}
       />
     </>
   )

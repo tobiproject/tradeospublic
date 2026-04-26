@@ -23,24 +23,25 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { AccountSwitcher } from '@/components/accounts/AccountSwitcher'
 import { useAuth } from '@/hooks/useAuth'
 import { useAccountContext } from '@/contexts/AccountContext'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_NAV_ITEMS = [
-  { id: 'dashboard',   href: '/dashboard',   label: 'Dashboard',   icon: LayoutDashboard, kbd: 'G D' },
-  { id: 'journal',     href: '/journal',     label: 'Journal',     icon: BookOpen,        kbd: 'G J' },
-  { id: 'performance', href: '/performance', label: 'Performance', icon: TrendingUp,      kbd: 'G P' },
-  { id: 'analysen',    href: '/analysen',    label: 'Analysen',    icon: Brain,           kbd: 'G A' },
-  { id: 'risk',        href: '/risk',        label: 'Risk',        icon: ShieldCheck,     kbd: 'G R' },
-  { id: 'wochenvorbereitung', href: '/wochenvorbereitung', label: 'Wochenvorbereitung', icon: Telescope,    kbd: null },
-  { id: 'kalender',           href: '/kalender',           label: 'Kalender',           icon: CalendarDays,  kbd: null },
-  { id: 'tagesplan',          href: '/tagesplan',          label: 'Tagesplan',           icon: ClipboardList, kbd: null },
-  { id: 'lernmodus',  href: '/lernmodus',  label: 'Lernen',     icon: GraduationCap, kbd: null },
-  { id: 'watchlist',  href: '/watchlist',  label: 'Watchlist',   icon: Star,          kbd: null },
-  { id: 'roadmap',         href: '/roadmap',         label: 'Roadmap',        icon: MapIcon,    kbd: null },
-  { id: 'knowledge-base',  href: '/knowledge-base',  label: 'Knowledge Base',  icon: BookMarked, kbd: null },
+  { id: 'dashboard',          href: '/dashboard',          label: 'Dashboard',          icon: LayoutDashboard, kbd: 'G D', tooltip: 'Deine wichtigsten KPIs, offene Trades und tägliche Zusammenfassung' },
+  { id: 'journal',            href: '/journal',            label: 'Journal',            icon: BookOpen,        kbd: 'G J', tooltip: 'Trades erfassen, bearbeiten und mit KI analysieren lassen' },
+  { id: 'performance',        href: '/performance',        label: 'Performance',        icon: TrendingUp,      kbd: 'G P', tooltip: 'Statistiken, Equity-Kurve, Win-Rate und Setup-Auswertung' },
+  { id: 'analysen',           href: '/analysen',           label: 'Analysen',           icon: Brain,           kbd: 'G A', tooltip: 'KI-generierte Muster und Verhaltensanalysen aus deinem Journal' },
+  { id: 'risk',               href: '/risk',               label: 'Risk',               icon: ShieldCheck,     kbd: 'G R', tooltip: 'Risiko-Regeln, Max-Drawdown, Tageslimit und Prop-Firm-Grenzen' },
+  { id: 'wochenvorbereitung', href: '/wochenvorbereitung', label: 'Wochenvorbereitung', icon: Telescope,       kbd: null,  tooltip: 'Ziele für die Woche setzen, Fokus-Assets wählen und Events tracken' },
+  { id: 'kalender',           href: '/kalender',           label: 'Kalender',           icon: CalendarDays,    kbd: null,  tooltip: 'Wirtschaftskalender und High-Impact-Events in deiner Zeitzone' },
+  { id: 'tagesplan',          href: '/tagesplan',          label: 'Tagesplan',          icon: ClipboardList,   kbd: null,  tooltip: 'Tägliche Routine: Pre-Market Checklist, Fokus-Assets und Tagesnotizen' },
+  { id: 'lernmodus',          href: '/lernmodus',          label: 'Lernen',             icon: GraduationCap,   kbd: null,  tooltip: 'Quiz, Chart-Replay und KI-Coach zum Verbessern deiner Entscheidungen' },
+  { id: 'watchlist',          href: '/watchlist',          label: 'Watchlist',          icon: Star,            kbd: null,  tooltip: 'Deine gehandelten Assets mit Kontraktwerten für die Risikoberechnung' },
+  { id: 'roadmap',            href: '/roadmap',            label: 'Roadmap',            icon: MapIcon,         kbd: null,  tooltip: 'Deine Trader-Journey: Level, Stärken/Schwächen und nächste Schritte' },
+  { id: 'knowledge-base',     href: '/knowledge-base',     label: 'Knowledge Base',     icon: BookMarked,      kbd: null,  tooltip: 'Deine Trading-Strategie als Wissensbasis für personalisierte KI-Ratschläge' },
 ]
 
 const STORAGE_KEY = 'nous-sidebar-order'
@@ -78,9 +79,10 @@ interface NavItemProps {
   item: typeof DEFAULT_NAV_ITEMS[0]
   isActive: boolean
   hasTodayPlan?: boolean
+  showTooltips?: boolean
 }
 
-function SortableNavItem({ item, isActive, hasTodayPlan }: NavItemProps) {
+function SortableNavItem({ item, isActive, hasTodayPlan, showTooltips }: NavItemProps) {
   const [hovered, setHovered] = useState(false)
   const {
     attributes,
@@ -122,34 +124,43 @@ function SortableNavItem({ item, isActive, hasTodayPlan }: NavItemProps) {
         <GripVertical className="h-3 w-3" />
       </button>
 
-      <Link
-        href={item.href}
-        className={cn(
-          'flex flex-1 items-center gap-2.5 px-2 py-1.5 rounded text-[13px] transition-colors duration-100',
-          isActive ? 'font-semibold' : 'font-medium'
-        )}
-        style={{
-          background: isActive ? 'var(--bg-3)' : hovered ? 'var(--bg-3)' : 'transparent',
-          color: isActive ? 'var(--fg-1)' : 'var(--fg-2)',
-        }}
-      >
-        <item.icon className="h-4 w-4 shrink-0" />
-        <span className="flex-1">{item.label}</span>
+      <Tooltip delayDuration={600}>
+        <TooltipTrigger asChild>
+          <Link
+            href={item.href}
+            className={cn(
+              'flex flex-1 items-center gap-2.5 px-2 py-1.5 rounded text-[13px] transition-colors duration-100',
+              isActive ? 'font-semibold' : 'font-medium'
+            )}
+            style={{
+              background: isActive ? 'var(--bg-3)' : hovered ? 'var(--bg-3)' : 'transparent',
+              color: isActive ? 'var(--fg-1)' : 'var(--fg-2)',
+            }}
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            <span className="flex-1">{item.label}</span>
 
-        {/* Tagesplan completion dot */}
-        {showTagesplanDot && (
-          <span
-            className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: 'var(--long)' }}
-          />
-        )}
+            {/* Tagesplan completion dot */}
+            {showTagesplanDot && (
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: 'var(--long)' }}
+              />
+            )}
 
-        {item.kbd && !showTagesplanDot && (
-          <span className="text-[10px] font-mono" style={{ color: 'var(--fg-4)' }}>
-            {item.kbd}
-          </span>
+            {item.kbd && !showTagesplanDot && (
+              <span className="text-[10px] font-mono" style={{ color: 'var(--fg-4)' }}>
+                {item.kbd}
+              </span>
+            )}
+          </Link>
+        </TooltipTrigger>
+        {showTooltips && item.tooltip && (
+          <TooltipContent side="right" className="max-w-[220px] text-xs">
+            {item.tooltip}
+          </TooltipContent>
         )}
-      </Link>
+      </Tooltip>
     </div>
   )
 }
@@ -233,24 +244,27 @@ export function AppSidebar() {
 
       {/* Navigation — draggable */}
       <nav className="flex-1 flex flex-col gap-0 px-1 overflow-y-auto">
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <SortableContext
-            items={navItems.map(i => i.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {navItems.map(item => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <SortableNavItem
-                  key={item.id}
-                  item={item}
-                  isActive={isActive}
-                  hasTodayPlan={hasTodayPlan}
-                />
-              )
-            })}
-          </SortableContext>
-        </DndContext>
+        <TooltipProvider>
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={navItems.map(i => i.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {navItems.map(item => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                return (
+                  <SortableNavItem
+                    key={item.id}
+                    item={item}
+                    isActive={isActive}
+                    hasTodayPlan={hasTodayPlan}
+                    showTooltips
+                  />
+                )
+              })}
+            </SortableContext>
+          </DndContext>
+        </TooltipProvider>
       </nav>
 
       {/* Bottom: account + logout */}
