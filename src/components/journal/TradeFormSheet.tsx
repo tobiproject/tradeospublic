@@ -20,6 +20,7 @@ import { Separator } from '@/components/ui/separator'
 
 import { useTrades, type Trade, type CreateTradeInput } from '@/hooks/useTrades'
 import { addReminder } from '@/components/layout/AnalysisReminderBanner'
+import { AssetCombobox } from '@/components/watchlist/AssetCombobox'
 import { useRiskConfig } from '@/hooks/useRiskConfig'
 import { calcRR, calcRiskPercent, calcResultPercent, calcOutcome, validateSLSide } from '@/lib/trade-calculations'
 import { useAccountContext } from '@/contexts/AccountContext'
@@ -55,6 +56,7 @@ const schema = z.object({
   emotion_after: z.string().optional(),
   tags: z.array(z.string()).optional(),
   notes: z.string().max(5000, 'Maximal 5000 Zeichen').optional(),
+  chart_url: z.string().url('Keine gültige URL').max(500).optional().or(z.literal('')),
   news_event_present: z.enum(['yes', 'no', 'unknown']).optional(),
   news_event_name: z.string().max(100).optional(),
   news_impact_level: z.enum(['high', 'medium', 'low']).optional(),
@@ -410,7 +412,6 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   editingTrade: Trade | null
-  assetSuggestions: string[]
   setupSuggestions: string[]
   strategySuggestions: string[]
   onSuccess: (newTradeId?: string) => void
@@ -421,7 +422,6 @@ export function TradeFormSheet({
   open,
   onOpenChange,
   editingTrade,
-  assetSuggestions,
   setupSuggestions,
   strategySuggestions,
   onSuccess,
@@ -484,6 +484,7 @@ export function TradeFormSheet({
         news_event_name: editingTrade.news_event_name ?? '',
         news_impact_level: editingTrade.news_impact_level ?? undefined,
         news_timing_minutes: editingTrade.news_timing_minutes ?? undefined,
+        chart_url: editingTrade.chart_url ?? '',
       })
       setExistingUrls(editingTrade.screenshot_urls ?? [])
       setNewFiles([])
@@ -549,6 +550,7 @@ export function TradeFormSheet({
       emotion_before: values.emotion_before || undefined,
       emotion_after: values.emotion_after || undefined,
       notes: values.notes || undefined,
+      chart_url: values.chart_url || null,
       screenshot_urls: existingUrls,
       news_event_present: values.news_event_present === 'yes' ? true : values.news_event_present === 'no' ? false : null,
       news_event_name: values.news_event_present === 'yes' ? (values.news_event_name || null) : null,
@@ -710,12 +712,11 @@ export function TradeFormSheet({
                       <FormItem>
                         <FormLabel>Asset</FormLabel>
                         <FormControl>
-                          <>
-                            <Input list="asset-suggestions" placeholder="EURUSD, BTC/USD…" {...field} />
-                            <datalist id="asset-suggestions">
-                              {assetSuggestions.map(a => <option key={a} value={a} />)}
-                            </datalist>
-                          </>
+                          <AssetCombobox
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled={isMutating}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -752,6 +753,35 @@ export function TradeFormSheet({
                     )}
                   />
                 </div>
+
+                {/* Chart URL */}
+                <FormField
+                  control={form.control}
+                  name="chart_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>TradingView Chart-Link</FormLabel>
+                      <FormControl>
+                        <div
+                          className="flex items-center gap-2 rounded-md px-3 h-9"
+                          style={{ background: 'var(--bg-2)', border: '1px solid var(--border-raw)' }}
+                        >
+                          <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--fg-4)' }}>
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                          </svg>
+                          <Input
+                            {...field}
+                            placeholder="https://www.tradingview.com/chart/…"
+                            className="h-7 text-sm border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                            disabled={isMutating}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* ── Preise & Größe ─────────────────────── */}

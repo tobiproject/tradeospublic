@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Plus, Trash2, Loader2, Check } from 'lucide-react'
+import { Trash2, Loader2, Check, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AssetMultiPicker } from '@/components/watchlist/AssetMultiPicker'
 
 interface Strategy {
   name: string
@@ -31,7 +32,6 @@ export default function EinstellungenPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [newRule, setNewRule] = useState('')
-  const [newInstrument, setNewInstrument] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
   const [nameSaved, setNameSaved] = useState(false)
@@ -98,15 +98,6 @@ export default function EinstellungenPage() {
         : [...s.preferred_timeframes, tf],
     }))
 
-  const addInstrument = () => {
-    const v = newInstrument.trim().toUpperCase()
-    if (!v || strategy.instruments.includes(v)) return
-    setStrategy(s => ({ ...s, instruments: [...s.instruments, v] }))
-    setNewInstrument('')
-  }
-
-  const removeInstrument = (i: number) =>
-    setStrategy(s => ({ ...s, instruments: s.instruments.filter((_, j) => j !== i) }))
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -243,40 +234,12 @@ export default function EinstellungenPage() {
           </Section>
 
           {/* Instruments */}
-          <Section title="Instrumente / Märkte" subtitle="Welche Assets tradest du?">
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {strategy.instruments.map((inst, i) => (
-                  <span
-                    key={i}
-                    className="ticker text-xs flex items-center gap-1.5 px-2.5 py-1 rounded"
-                    style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
-                  >
-                    {inst}
-                    <button onClick={() => removeInstrument(i)}>
-                      <Trash2 className="h-3 w-3" style={{ color: 'var(--fg-4)' }} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  value={newInstrument}
-                  onChange={e => setNewInstrument(e.target.value)}
-                  placeholder="EURUSD, NQ, BTC…"
-                  className="ticker uppercase"
-                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addInstrument())}
-                />
-                <Button
-                  type="button"
-                  onClick={addInstrument}
-                  className="h-8 px-3 shrink-0 rounded"
-                  style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+          <Section title="Instrumente / Märkte" subtitle="Welche Assets tradest du? Aus deiner Watchlist wählen.">
+            <AssetMultiPicker
+              value={strategy.instruments}
+              onChange={instruments => setStrategy(s => ({ ...s, instruments }))}
+              placeholder="Asset aus Watchlist…"
+            />
           </Section>
 
         </div>

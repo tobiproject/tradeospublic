@@ -36,10 +36,13 @@
 | PROJ-20 | Absolute Risk Display (EUR/USD) | Deployed | [PROJ-20-absolute-risk-display.md](PROJ-20-absolute-risk-display.md) | 2026-04-26 |
 | PROJ-21 | Personalized Greeting (display_name) | Deployed | [PROJ-21-personalized-greeting.md](PROJ-21-personalized-greeting.md) | 2026-04-26 |
 | PROJ-22 | Weekly AI Prep | Deployed | [PROJ-22-weekly-prep.md](PROJ-22-weekly-prep.md) | 2026-04-26 |
+| PROJ-23 | Watchlist (Asset-Verwaltung) | Deployed | [PROJ-23-watchlist.md](PROJ-23-watchlist.md) | 2026-04-26 |
+| PROJ-24 | TradingView Chart Link | Deployed | [PROJ-24-tradingview-chart-link.md](PROJ-24-tradingview-chart-link.md) | 2026-04-26 |
+| PROJ-25 | Trader Journey & KI-Roadmap | In Progress | [PROJ-25-trader-journey.md](PROJ-25-trader-journey.md) | 2026-04-26 |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-23
+## Next Available ID: PROJ-26
 
 ## Build Order (Empfohlen)
 

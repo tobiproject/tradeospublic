@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Minus, X, Loader2, Save, CheckCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Loader2, Save, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useDailyPlan, type DailyPlan, type DailyPlanInput } from '@/hooks/useDailyPlan'
+import { AssetMultiPicker } from '@/components/watchlist/AssetMultiPicker'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 
@@ -36,23 +35,12 @@ export function DailyPlanForm({ initialPlan, onSaved }: Props) {
   const { savePlan } = useDailyPlan()
   const [bias, setBias] = useState<Bias | null>(initialPlan?.market_bias ?? null)
   const [focusAssets, setFocusAssets] = useState<string[]>(initialPlan?.focus_assets ?? [])
-  const [assetInput, setAssetInput] = useState('')
   const [errorsToAvoid, setErrorsToAvoid] = useState<string[]>(initialPlan?.errors_to_avoid ?? [])
   const [notes, setNotes] = useState(initialPlan?.notes ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   const today = format(new Date(), 'EEEE, d. MMMM yyyy', { locale: de })
-
-  const addAsset = () => {
-    const v = assetInput.trim().toUpperCase()
-    if (v && !focusAssets.includes(v)) {
-      setFocusAssets(prev => [...prev, v])
-    }
-    setAssetInput('')
-  }
-
-  const removeAsset = (a: string) => setFocusAssets(prev => prev.filter(x => x !== a))
 
   const toggleError = (e: string) => {
     setErrorsToAvoid(prev =>
@@ -120,30 +108,11 @@ export function DailyPlanForm({ initialPlan, onSaved }: Props) {
       {/* Focus Assets */}
       <div className="space-y-2">
         <p className="text-sm font-medium">Fokus-Assets heute</p>
-        <div className="flex gap-2">
-          <Input
-            placeholder="z.B. EURUSD, BTC/USD…"
-            value={assetInput}
-            onChange={e => setAssetInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addAsset() } }}
-            className="h-8 text-sm"
-          />
-          <Button type="button" variant="outline" size="sm" onClick={addAsset}>
-            Hinzufügen
-          </Button>
-        </div>
-        {focusAssets.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {focusAssets.map(a => (
-              <Badge key={a} variant="secondary" className="gap-1 text-xs">
-                {a}
-                <button type="button" onClick={() => removeAsset(a)}>
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
+        <AssetMultiPicker
+          value={focusAssets}
+          onChange={setFocusAssets}
+          placeholder="Asset aus Watchlist…"
+        />
       </div>
 
       {/* Errors to Avoid */}

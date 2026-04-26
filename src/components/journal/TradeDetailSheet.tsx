@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { de } from 'date-fns/locale'
-import { Edit2, Trash2, TrendingUp, TrendingDown } from 'lucide-react'
+import { Edit2, Trash2, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -195,25 +195,42 @@ export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }
               </>
             )}
 
-            {/* Screenshots */}
-            {trade.screenshot_urls?.length > 0 && (
+            {/* Screenshots & Chart Link */}
+            {(trade.screenshot_urls?.length > 0 || trade.chart_url) && (
               <>
                 <Separator />
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                    Screenshots ({trade.screenshot_urls.length})
+                <div className="space-y-3">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Screenshots & Chart
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {trade.screenshot_urls.map((url, i) => (
-                      <button
-                        key={url}
-                        onClick={() => setLightboxUrl(url)}
-                        className="relative aspect-video rounded-md overflow-hidden border border-border/60 hover:border-primary/50 transition-colors bg-muted"
-                      >
-                        <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
+                  {trade.chart_url && (
+                    <a
+                      href={trade.chart_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2.5 rounded px-3 py-2 transition-colors group"
+                      style={{ background: 'var(--bg-3)', border: '1px solid var(--border-raw)' }}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--brand-blue)' }} />
+                      <span className="text-xs flex-1 truncate" style={{ color: 'var(--fg-2)' }}>
+                        TradingView Chart öffnen
+                      </span>
+                      <span className="text-[10px]" style={{ color: 'var(--fg-4)' }}>↗</span>
+                    </a>
+                  )}
+                  {trade.screenshot_urls?.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {trade.screenshot_urls.map((url, i) => (
+                        <button
+                          key={url}
+                          onClick={() => setLightboxUrl(url)}
+                          className="relative aspect-video rounded-md overflow-hidden border border-border/60 hover:border-primary/50 transition-colors bg-muted"
+                        >
+                          <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}

@@ -58,7 +58,7 @@ export function JournalContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(() => searchParams.get('new') === '1')
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null)
   const [detailTrade, setDetailTrade] = useState<Trade | null>(null)
@@ -217,7 +217,6 @@ export function JournalContent() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         editingTrade={editingTrade}
-        assetSuggestions={assetSuggestions}
         setupSuggestions={setupSuggestions}
         strategySuggestions={strategySuggestions}
         onSuccess={handleFormSuccess}
