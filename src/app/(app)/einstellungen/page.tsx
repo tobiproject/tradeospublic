@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Trash2, Loader2, Check, Plus } from 'lucide-react'
+import { Trash2, Loader2, Check, Plus, ExternalLink, Brain } from 'lucide-react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -240,6 +241,44 @@ export default function EinstellungenPage() {
               onChange={instruments => setStrategy(s => ({ ...s, instruments }))}
               placeholder="Asset aus Watchlist…"
             />
+          </Section>
+
+          {/* Anthropic API Costs */}
+          <Section title="KI-Kosten (Anthropic)" subtitle="TradeOS nutzt Claude Sonnet für alle KI-Funktionen — hier deine Kosten im Blick behalten.">
+            <div className="space-y-3">
+              <div
+                className="rounded px-4 py-3 flex items-start gap-3"
+                style={{ background: 'var(--bg-3)', border: '1px solid var(--border-raw)' }}
+              >
+                <Brain className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--brand-blue)' }} />
+                <div className="text-sm space-y-1" style={{ color: 'var(--fg-3)' }}>
+                  <p>Jede KI-Analyse (Trade-Analyse, Roadmap, Wochenvorbereitung) kostet ca. <span style={{ color: 'var(--fg-1)' }}>$0.002–$0.01</span> — bei normalem Nutzungsverhalten unter <span style={{ color: 'var(--fg-1)' }}>$5/Monat</span>.</p>
+                  <p className="text-xs" style={{ color: 'var(--fg-4)' }}>Exakte Kosten und Verbrauch siehst du im Anthropic Console.</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Link
+                  href="https://console.anthropic.com/settings/billing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-opacity hover:opacity-80"
+                  style={{ background: 'var(--brand-blue)', color: '#fff' }}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Billing & Kosten öffnen
+                </Link>
+                <Link
+                  href="https://console.anthropic.com/settings/usage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-opacity hover:opacity-80"
+                  style={{ background: 'var(--bg-3)', color: 'var(--fg-2)', border: '1px solid var(--border-raw)' }}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  API Usage ansehen
+                </Link>
+              </div>
+            </div>
           </Section>
 
         </div>
