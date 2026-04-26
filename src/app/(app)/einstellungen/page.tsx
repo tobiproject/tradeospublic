@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Trash2, Loader2, Check, Plus, ExternalLink, Brain } from 'lucide-react'
+import { Trash2, Loader2, Check, Plus, ExternalLink, Brain, Bell, BellOff, Mail } from 'lucide-react'
 import Link from 'next/link'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -54,6 +56,39 @@ export default function EinstellungenPage() {
   const [displayName, setDisplayName] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
   const [nameSaved, setNameSaved] = useState(false)
+  const [notifEmail, setNotifEmail] = useState('')
+  const [notifEmailEnabled, setNotifEmailEnabled] = useState(false)
+  const [notifSaving, setNotifSaving] = useState(false)
+  const { permission, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications()
+
+  useEffect(() => {
+    fetch('/api/notifications/settings').then(r => r.json()).then(d => {
+      setNotifEmailEnabled(d.email_enabled ?? false)
+      setNotifEmail(d.email_address ?? '')
+    })
+  }, [])
+
+  const saveNotifSettings = useCallback(async () => {
+    setNotifSaving(true)
+    await fetch('/api/notifications/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email_enabled: notifEmailEnabled, email_address: notifEmail }),
+    })
+    setNotifSaving(false)
+    toast.success('Einstellungen gespeichert')
+  }, [notifEmailEnabled, notifEmail])
+
+  const handlePushToggle = async () => {
+    if (subscribed || permission === 'granted') {
+      await unsubscribe()
+      toast.success('Push-Benachrichtigungen deaktiviert')
+    } else {
+      const ok = await subscribe()
+      if (ok) toast.success('Push-Benachrichtigungen aktiviert')
+      else if (permission === 'denied') toast.error('Browser hat Benachrichtigungen blockiert — bitte in Browser-Einstellungen erlauben')
+    }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -269,6 +304,92 @@ export default function EinstellungenPage() {
               onChange={instruments => setStrategy(s => ({ ...s, instruments }))}
               placeholder="Asset aus Watchlist…"
             />
+          </Section>
+
+          {/* Notifications */}
+          <Section title="Benachrichtigungen" subtitle="Erinnerungen für Wochenvorbereitung — samstags & sonntags 9:00 Uhr">
+            <div className="space-y-4">
+              {/* Push */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  {(subscribed || permission === 'granted') ? (
+                    <Bell className="h-4 w-4" style={{ color: 'var(--long)' }} />
+                  ) : (
+                    <BellOff className="h-4 w-4" style={{ color: 'var(--fg-4)' }} />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: 'var(--fg-1)' }}>Browser Push</p>
+                    <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+                      {permission === 'denied'
+                        ? 'Vom Browser blockiert — in Browser-Einstellungen erlauben'
+                        : permission === 'unsupported'
+                        ? 'Von diesem Browser nicht unterstützt'
+                        : subscribed || permission === 'granted'
+                        ? 'Aktiv — du erhältst Samstag & Sonntag eine Erinnerung'
+                        : 'Einmalige Browser-Erlaubnis nötig'}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handlePushToggle}
+                  disabled={pushLoading || permission === 'denied' || permission === 'unsupported'}
+                  className="h-8 px-3 text-xs font-semibold rounded shrink-0"
+                  style={{
+                    background: (subscribed || permission === 'granted') ? 'var(--bg-3)' : 'var(--brand-blue)',
+                    color: (subscribed || permission === 'granted') ? 'var(--fg-2)' : '#fff',
+                    border: (subscribed || permission === 'granted') ? '1px solid var(--border-raw)' : 'none',
+                  }}
+                >
+                  {pushLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                    (subscribed || permission === 'granted') ? 'Deaktivieren' : 'Aktivieren'}
+                </Button>
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: '1px solid var(--border-raw)' }} />
+
+              {/* Email */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2.5">
+                  <Mail className="h-4 w-4" style={{ color: notifEmailEnabled ? 'var(--brand-blue)' : 'var(--fg-4)' }} />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium" style={{ color: 'var(--fg-1)' }}>E-Mail Erinnerung</p>
+                    <p className="text-xs" style={{ color: 'var(--fg-4)' }}>Benötigt einen konfigurierten Resend-Key (RESEND_API_KEY)</p>
+                  </div>
+                  <button
+                    onClick={() => setNotifEmailEnabled(v => !v)}
+                    className="w-10 h-5 rounded-full transition-colors shrink-0 relative"
+                    style={{ background: notifEmailEnabled ? 'var(--brand-blue)' : 'var(--bg-4)' }}
+                  >
+                    <span
+                      className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
+                      style={{
+                        background: '#fff',
+                        left: notifEmailEnabled ? '22px' : '2px',
+                      }}
+                    />
+                  </button>
+                </div>
+                {notifEmailEnabled && (
+                  <Input
+                    type="email"
+                    value={notifEmail}
+                    onChange={e => setNotifEmail(e.target.value)}
+                    placeholder="deine@email.de"
+                  />
+                )}
+              </div>
+
+              <Button
+                onClick={saveNotifSettings}
+                disabled={notifSaving}
+                className="h-8 px-3 text-xs font-semibold rounded"
+                style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
+              >
+                {notifSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+                Speichern
+              </Button>
+            </div>
           </Section>
 
           {/* Anthropic API Costs */}
