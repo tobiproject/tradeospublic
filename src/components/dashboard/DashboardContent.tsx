@@ -13,6 +13,7 @@ import { RecentTradesTable } from './RecentTradesTable'
 import { TradeDetailSheet } from '@/components/journal/TradeDetailSheet'
 import { InsightsPreview } from '@/components/ai/InsightsPreview'
 import { DailyPlanCTA } from '@/components/tagesplan/DailyPlanCTA'
+import { WeeklyPrepCard } from './WeeklyPrepCard'
 import type { Trade } from '@/hooks/useTrades'
 
 type PeriodDays = 7 | 30 | 90 | null
@@ -34,6 +35,11 @@ export function DashboardContent() {
   const [period, setPeriod] = useState<PeriodDays>(30)
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [displayName, setDisplayName] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/profile').then(r => r.json()).then(d => setDisplayName(d.display_name ?? null))
+  }, [])
 
   const load = useCallback(async () => {
     if (!activeAccount) return
@@ -81,7 +87,8 @@ export function DashboardContent() {
   }
 
   const now = new Date()
-  const greeting = now.getHours() < 12 ? 'Guten Morgen' : now.getHours() < 18 ? 'Guten Tag' : 'Guten Abend'
+  const greetingBase = now.getHours() < 12 ? 'Guten Morgen' : now.getHours() < 18 ? 'Guten Tag' : 'Guten Abend'
+  const greeting = displayName ? `${greetingBase}, ${displayName}` : greetingBase
 
   return (
     <>
@@ -143,6 +150,9 @@ export function DashboardContent() {
 
         {/* Tagesplan CTA */}
         <DailyPlanCTA />
+
+        {/* Wochenvorbereitung */}
+        <WeeklyPrepCard />
 
         {/* KI Insights */}
         <InsightsPreview />

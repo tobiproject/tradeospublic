@@ -32,23 +32,39 @@ export default function EinstellungenPage() {
   const [saved, setSaved] = useState(false)
   const [newRule, setNewRule] = useState('')
   const [newInstrument, setNewInstrument] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [nameSaving, setNameSaving] = useState(false)
+  const [nameSaved, setNameSaved] = useState(false)
 
   useEffect(() => {
-    fetch('/api/strategy')
-      .then(r => r.json())
-      .then(data => {
-        if (data.strategy) {
-          setStrategy({
-            name: data.strategy.name || '',
-            description: data.strategy.description || '',
-            rules: data.strategy.rules || [],
-            preferred_timeframes: data.strategy.preferred_timeframes || [],
-            instruments: data.strategy.instruments || [],
-          })
-        }
-      })
-      .finally(() => setLoading(false))
+    Promise.all([
+      fetch('/api/strategy').then(r => r.json()),
+      fetch('/api/profile').then(r => r.json()),
+    ]).then(([stratData, profileData]) => {
+      if (stratData.strategy) {
+        setStrategy({
+          name: stratData.strategy.name || '',
+          description: stratData.strategy.description || '',
+          rules: stratData.strategy.rules || [],
+          preferred_timeframes: stratData.strategy.preferred_timeframes || [],
+          instruments: stratData.strategy.instruments || [],
+        })
+      }
+      setDisplayName(profileData.display_name ?? '')
+    }).finally(() => setLoading(false))
   }, [])
+
+  const saveName = useCallback(async () => {
+    setNameSaving(true)
+    await fetch('/api/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ display_name: displayName }),
+    })
+    setNameSaving(false)
+    setNameSaved(true)
+    setTimeout(() => setNameSaved(false), 2500)
+  }, [displayName])
 
   const save = useCallback(async () => {
     setSaving(true)
@@ -126,7 +142,27 @@ export default function EinstellungenPage() {
       ) : (
         <div className="space-y-6">
 
-          {/* Name */}
+          {/* Profile */}
+          <Section title="Dein Profil" subtitle="Wird für personalisierte Begrüßungen und KI-Kontext verwendet">
+            <div className="flex gap-2">
+              <Input
+                value={displayName}
+                onChange={e => setDisplayName(e.target.value)}
+                placeholder="Wie soll dich TradeOS nennen? z.B. Tobi"
+                className="flex-1"
+              />
+              <Button
+                onClick={saveName}
+                disabled={nameSaving}
+                className="h-8 px-4 text-[13px] font-semibold rounded shrink-0"
+                style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
+              >
+                {nameSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : nameSaved ? <Check className="h-4 w-4" /> : 'Speichern'}
+              </Button>
+            </div>
+          </Section>
+
+          {/* Strategy Name */}
           <Section title="Strategie-Name">
             <Input
               value={strategy.name}

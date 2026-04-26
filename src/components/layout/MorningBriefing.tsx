@@ -16,11 +16,15 @@ const CHECKLIST = [
 export function MorningBriefing() {
   const [visible, setVisible] = useState(false)
   const [checked, setChecked] = useState<boolean[]>(CHECKLIST.map(() => false))
+  const [displayName, setDisplayName] = useState<string | null>(null)
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
     const key = `tradeos-morning-${today}`
-    if (!localStorage.getItem(key)) setVisible(true)
+    if (!localStorage.getItem(key)) {
+      setVisible(true)
+      fetch('/api/profile').then(r => r.json()).then(d => setDisplayName(d.display_name ?? null))
+    }
   }, [])
 
   if (!visible) return null
@@ -51,7 +55,7 @@ export function MorningBriefing() {
             className="text-xl font-bold"
             style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--fg-1)' }}
           >
-            Bereit für den Tag?
+            {displayName ? `Guten Morgen, ${displayName}.` : 'Bereit für den Tag?'}
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--fg-3)' }}>
             Hak ab, bevor du anfängst zu traden.

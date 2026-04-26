@@ -11,6 +11,7 @@ export interface Account {
   currency: string
   start_balance: number
   description: string | null
+  account_type: 'futures' | 'cfd' | 'prop' | 'eigenhandel' | null
   is_archived: boolean
   created_at: string
 }

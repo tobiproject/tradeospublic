@@ -72,10 +72,11 @@ type FormValues = z.infer<typeof schema>
 
 // ─── Live Calc Preview ───────────────────────────────────────────────────────
 
-function CalcPreview({ values, accountBalance, maxRiskPct }: {
+function CalcPreview({ values, accountBalance, maxRiskPct, currency }: {
   values: Partial<Pick<FormValues, 'entry_price' | 'sl_price' | 'tp_price' | 'lot_size' | 'result_currency' | 'direction'>>
   accountBalance: number
   maxRiskPct?: number | null
+  currency?: string
 }) {
   const rr = calcRR(values.entry_price, values.sl_price, values.tp_price)
   const risk = calcRiskPercent(values.entry_price, values.sl_price, values.lot_size, accountBalance)
@@ -85,6 +86,8 @@ function CalcPreview({ values, accountBalance, maxRiskPct }: {
     ? validateSLSide(values.direction, values.entry_price, values.sl_price)
     : null
   const riskExceeded = risk !== null && maxRiskPct != null && risk > maxRiskPct
+  const riskAmount = risk !== null ? Math.round(risk * accountBalance) / 100 : null
+  const curr = currency ?? 'EUR'
 
   return (
     <div className="rounded-lg bg-muted/40 border border-border/60 p-4 space-y-3">
@@ -98,6 +101,11 @@ function CalcPreview({ values, accountBalance, maxRiskPct }: {
           <p className={cn('text-lg font-bold tabular-nums', riskExceeded ? 'text-red-400' : 'text-amber-400')}>
             {risk !== null ? `${risk.toFixed(2)}%` : '–'}
           </p>
+          {riskAmount !== null && (
+            <p className="text-[11px] tabular-nums" style={{ color: 'var(--fg-4)' }}>
+              {riskAmount.toFixed(2)} {curr}
+            </p>
+          )}
         </div>
         <div>
           <p className="text-xs text-muted-foreground mb-0.5">Result %</p>
@@ -762,6 +770,7 @@ export function TradeFormSheet({
                   values={liveValues}
                   accountBalance={activeAccount?.start_balance ?? 10000}
                   maxRiskPct={maxRiskPct}
+                  currency={activeAccount?.currency}
                 />
               </div>
 

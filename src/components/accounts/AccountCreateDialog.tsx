@@ -30,10 +30,18 @@ import { useAccounts } from '@/hooks/useAccounts'
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD', 'BTC', 'USDT']
 
+const ACCOUNT_TYPES = [
+  { value: 'futures',     label: 'Futures' },
+  { value: 'cfd',         label: 'CFD' },
+  { value: 'prop',        label: 'Prop Firm' },
+  { value: 'eigenhandel', label: 'Eigenhandel' },
+]
+
 const schema = z.object({
   name: z.string().min(1, 'Name ist erforderlich.').max(50, 'Max. 50 Zeichen.'),
   start_balance: z.number({ message: 'Bitte eine Zahl eingeben.' }).min(1, 'Startbalance muss mindestens 1 sein.'),
   currency: z.string().min(1, 'Währung ist erforderlich.'),
+  account_type: z.string().optional(),
   broker: z.string().optional(),
   description: z.string().optional(),
 })
@@ -55,6 +63,7 @@ export function AccountCreateDialog({ trigger }: AccountCreateDialogProps) {
       name: '',
       start_balance: 0,
       currency: 'EUR',
+      account_type: '',
       broker: '',
       description: '',
     },
@@ -165,6 +174,29 @@ export function AccountCreateDialog({ trigger }: AccountCreateDialogProps) {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="account_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Konto-Typ <span className="text-muted-foreground">(optional)</span></FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Typ wählen…" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {ACCOUNT_TYPES.map(t => (
+                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

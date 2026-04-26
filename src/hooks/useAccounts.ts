@@ -10,6 +10,7 @@ export interface CreateAccountInput {
   currency: string
   broker?: string
   description?: string
+  account_type?: string
 }
 
 const ACCOUNT_LIMIT = 10
@@ -36,6 +37,7 @@ export function useAccounts() {
         currency: input.currency,
         broker: input.broker || null,
         description: input.description || null,
+        account_type: input.account_type || null,
       })
 
       if (!error) await refreshAccounts()
