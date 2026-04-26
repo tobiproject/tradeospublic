@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse')
 
 export async function GET() {
   const supabase = await createServerSupabaseClient()
@@ -58,6 +56,9 @@ export async function POST(req: NextRequest) {
 
   // Extract text from PDF
   try {
+    // Dynamic import prevents DOMMatrix errors during build-time module evaluation
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfParse = require('pdf-parse')
     const parsed = await pdfParse(Buffer.from(bytes))
     const text = parsed.text?.trim() ?? ''
 

@@ -35,32 +35,50 @@ export async function POST() {
   const winRate = Math.round((wins / trades.length) * 100)
   const avgRR = trades.filter(t => t.rr_ratio).reduce((s, t) => s + (t.rr_ratio ?? 0), 0) / trades.filter(t => t.rr_ratio).length
 
-  const prompt = `Du bist ein erfahrener Trading-Coach. Analysiere die Trading-Performance des Traders und erstelle eine ehrliche, motivierende Roadmap.
+  const hasStrategy = !!strategyRow?.name
 
-STRATEGIE: ${strategyRow?.name ?? 'Unbekannt'} — ${strategyRow?.description ?? 'Keine Beschreibung'}
-REGELN: ${(strategyRow?.rules ?? []).join('; ') || 'Keine'}
+  const prompt = `Du bist ein erfahrener, ungeschminkter Trading-Coach. Deine Aufgabe ist es, dem Trader die WAHRHEIT zu sagen — nicht das, was er hören will. Kein Schönreden, kein Motivationsgequatsche. Analysiere die Daten und gib eine harte, ehrliche Einschätzung.
 
-TRADES (letzte 90 Tage): ${trades.length} Trades
+STRATEGIE: ${strategyRow?.name ?? 'KEINE STRATEGIE ANGELEGT'} — ${strategyRow?.description ?? '—'}
+REGELN: ${(strategyRow?.rules ?? []).join('; ') || 'Keine Regeln definiert'}
+TRADES-ANZAHL GESAMT: ${trades.length}
+
+PERFORMANCE (letzte 90 Tage):
 - Win-Rate: ${winRate}%
 - Wins: ${wins}, Losses: ${losses}
-- Durchschnittliches RR: ${avgRR.toFixed(2)}
+- Durchschnittliches RR: ${isNaN(avgRR) ? '?' : avgRR.toFixed(2)}
 - Assets: ${[...new Set(trades.map(t => t.asset))].join(', ')}
-- Emotions vor Trades: ${[...new Set(trades.map(t => t.emotion_before).filter(Boolean))].join(', ')}
+- Emotions vor Trades (häufigste): ${[...new Set(trades.map(t => t.emotion_before).filter(Boolean))].join(', ') || 'nicht erfasst'}
+- Emotions nach Trades: ${[...new Set(trades.map(t => t.emotion_after).filter(Boolean))].join(', ') || 'nicht erfasst'}
 - Lektionen aus Nachbereitungen: ${trades.filter(t => t.lesson_learned).map(t => t.lesson_learned).slice(-10).join(' | ') || 'Keine'}
 
-Antworte NUR mit einem JSON-Objekt in diesem exakten Format (kein Markdown, kein Text darum):
+TRADER-JOURNEY PHASEN (wähle eine aus 1-6):
+1 = "Erste Erfolge" — Euphorie, denkt er hat es verstanden, Anfängerglück
+2 = "Erster Einbruch" — erste echte Verluste, Selbstzweifel beginnen
+3 = "Der Tiefpunkt" — größte Verluste, Frustration, viele geben hier auf
+4 = "Langsames Lernen" — beginnt zu verstehen was Trading wirklich bedeutet
+5 = "Konsistenz aufbauen" — erste Beständigkeit, aber noch nicht profitabel
+6 = "Profitabler Trader" — reproduzierbar profitabel
+
+Antworte NUR mit einem JSON-Objekt (kein Markdown, kein Text darum):
 {
   "level": "Beginner" | "Developing" | "Consistent" | "Profitabel",
-  "score": <Zahl 0-100 wie weit du in deiner aktuellen Stufe bist>,
-  "level_description": "<1 Satz was diese Stufe bedeutet>",
-  "next_level": "<Name der nächsten Stufe oder null wenn bereits Profitabel>",
+  "score": <Zahl 0-100 wie weit in der aktuellen Stufe>,
+  "level_description": "<1 harter Satz was diese Stufe bedeutet — keine Weichspülerei>",
+  "next_level": "<Name der nächsten Stufe oder null>",
+  "journey_phase": <1-6>,
+  "journey_phase_label": "<Name der Phase>",
+  "journey_phase_description": "<2 Sätze was diese Phase bedeutet — ehrlich und direkt>",
+  "honest_assessment": "<3-4 Sätze harte Wahrheit über den aktuellen Stand. Nenne konkrete Probleme beim Namen. Kein Schönreden.>",
   "strengths": ["<Stärke 1>", "<Stärke 2>", "<Stärke 3>"],
   "weaknesses": ["<Schwäche 1>", "<Schwäche 2>", "<Schwäche 3>"],
+  "danger_zones": ["<Fallstrick 1 der in den nächsten Wochen lauert>", "<Fallstrick 2>", "<Fallstrick 3>"],
   "next_milestone": "<Konkreter nächster Schritt — was muss sich ändern>",
-  "time_estimate": "<Ehrliche Einschätzung z.B. '3-6 Monate bei aktueller Entwicklung'>",
-  "narrative": "<3-4 motivierende Sätze die den aktuellen Stand und die Reise beschreiben>",
+  "trades_to_next_milestone": <geschätzte Anzahl Trades bis zum nächsten Meilenstein — realistisch>,
+  "time_estimate": "<Ehrliche Zeitschätzung bis zur Profitabilität — wenn aktueller Trend anhält>",
+  "narrative": "<3-4 Sätze — ehrlich, direkt, ohne Schönfärberei aber konstruktiv>",
   "milestones": [
-    { "label": "<Meilenstein>", "achieved": <true|false>, "description": "<kurze Erklärung>" }
+    { "label": "<Meilenstein>", "achieved": <true|false>, "description": "<kurze Erklärung>", "trades_needed": <Zahl oder null> }
   ]
 }`
 
@@ -84,7 +102,7 @@ Antworte NUR mit einem JSON-Objekt in diesem exakten Format (kein Markdown, kein
     { onConflict: 'user_id' }
   )
 
-  return NextResponse.json({ roadmap: roadmapData })
+  return NextResponse.json({ roadmap: roadmapData, has_strategy: hasStrategy, trade_count: trades.length })
 }
 
 export async function GET() {
@@ -92,11 +110,16 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data } = await supabase
-    .from('user_roadmap')
-    .select('data, generated_at')
-    .eq('user_id', user.id)
-    .single()
+  const [{ data }, { data: strategy }, { count }] = await Promise.all([
+    supabase.from('user_roadmap').select('data, generated_at').eq('user_id', user.id).single(),
+    supabase.from('user_strategy').select('name').eq('user_id', user.id).maybeSingle(),
+    supabase.from('trades').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+  ])
 
-  return NextResponse.json({ roadmap: data?.data ?? null, generated_at: data?.generated_at ?? null })
+  return NextResponse.json({
+    roadmap: data?.data ?? null,
+    generated_at: data?.generated_at ?? null,
+    has_strategy: !!strategy?.name,
+    trade_count: count ?? 0,
+  })
 }
