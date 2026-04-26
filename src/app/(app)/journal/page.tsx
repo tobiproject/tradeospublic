@@ -6,7 +6,7 @@ import { JournalContent } from '@/components/journal/JournalContent'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export const metadata: Metadata = {
-  title: 'Journal — Trade OS',
+  title: 'Journal — NOUS',
 }
 
 export default function JournalPage() {

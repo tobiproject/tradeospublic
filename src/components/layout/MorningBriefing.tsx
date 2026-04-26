@@ -47,7 +47,7 @@ export function MorningBriefing() {
     if (!activeAccount) return
 
     const today = new Date().toISOString().split('T')[0]
-    if (localStorage.getItem(`tradeos-morning-${today}`)) return
+    if (localStorage.getItem(`nous-morning-${today}`)) return
 
     setVisible(true)
     fetch('/api/profile').then(r => r.json()).then(d => setDisplayName(d.display_name ?? null))
@@ -75,7 +75,7 @@ export function MorningBriefing() {
 
   const dismiss = () => {
     const today = new Date().toISOString().split('T')[0]
-    localStorage.setItem(`tradeos-morning-${today}`, '1')
+    localStorage.setItem(`nous-morning-${today}`, '1')
     setVisible(false)
   }
 

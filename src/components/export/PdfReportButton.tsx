@@ -53,7 +53,7 @@ export function PdfReportButton() {
       doc.setTextColor(255, 255, 255)
       doc.setFontSize(28)
       doc.setFont('helvetica', 'bold')
-      doc.text('Trade OS', 20, 40)
+      doc.text('NOUS', 20, 40)
 
       doc.setFontSize(16)
       doc.setFont('helvetica', 'normal')
@@ -172,7 +172,7 @@ export function PdfReportButton() {
         doc.setPage(i)
         doc.setFontSize(8)
         doc.setTextColor(63, 63, 70)
-        doc.text(`Trade OS — ${activeAccount!.name} — ${monthLabel}`, 20, 290)
+        doc.text(`NOUS — ${activeAccount!.name} — ${monthLabel}`, 20, 290)
         doc.text(`${i} / ${pageCount}`, 190, 290, { align: 'right' })
       }
 

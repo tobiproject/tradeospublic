@@ -1,6 +1,6 @@
 import { ReplayPage } from '@/components/lernmodus/replay/ReplayPage'
 
-export const metadata = { title: 'Trade-Replay — Trade OS' }
+export const metadata = { title: 'Trade-Replay — NOUS' }
 
 export default function ReplayRoute() {
   return (

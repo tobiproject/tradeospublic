@@ -168,7 +168,7 @@ export default function EinstellungenPage() {
               <Input
                 value={displayName}
                 onChange={e => setDisplayName(e.target.value)}
-                placeholder="Wie soll dich TradeOS nennen? z.B. Tobi"
+                placeholder="Wie soll dich NOUS nennen? z.B. Tobi"
                 className="flex-1"
               />
               <Button
@@ -272,7 +272,7 @@ export default function EinstellungenPage() {
           </Section>
 
           {/* Anthropic API Costs */}
-          <Section title="KI-Kosten (Anthropic)" subtitle="TradeOS nutzt Claude Sonnet für alle KI-Funktionen — hier deine Kosten im Blick behalten.">
+          <Section title="KI-Kosten (Anthropic)" subtitle="NOUS nutzt Claude Sonnet für alle KI-Funktionen — hier deine Kosten im Blick behalten.">
             <div className="space-y-3">
               <div
                 className="rounded px-4 py-3 flex items-start gap-3"

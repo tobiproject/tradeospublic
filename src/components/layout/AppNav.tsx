@@ -31,7 +31,7 @@ export function AppNav() {
         <div className="flex h-14 items-center gap-4">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold shrink-0">
             <BarChart2 className="h-5 w-5 text-primary" />
-            Trade OS
+            NOUS
           </Link>
 
           <Separator orientation="vertical" className="h-5" />

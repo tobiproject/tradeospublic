@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, MinusCircle } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, MinusCircle, ExternalLink, LineChart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAccountContext } from '@/contexts/AccountContext'
 
@@ -102,6 +102,22 @@ export function QuizCard({ trade, sessionId, onAnswer }: Props) {
               unoptimized
             />
           </div>
+        )}
+
+        {/* TradingView chart link — opens as popup window */}
+        {trade.chart_url && trade.screenshot_urls.length === 0 && (
+          <button
+            type="button"
+            onClick={() => window.open(trade.chart_url!, 'nous-chart', 'width=1400,height=900,left=100,top=80,resizable=yes,scrollbars=yes')}
+            className="w-full flex items-center gap-3 rounded-md px-4 py-3 text-sm transition-colors hover:opacity-80"
+            style={{ background: 'rgba(41,98,255,0.08)', border: '1px solid rgba(41,98,255,0.25)' }}
+          >
+            <LineChart className="h-4 w-4 shrink-0" style={{ color: 'var(--brand-blue)' }} />
+            <span className="flex-1 text-left font-medium" style={{ color: 'var(--brand-blue)' }}>
+              Chart ansehen (TradingView)
+            </span>
+            <ExternalLink className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--brand-blue)' }} />
+          </button>
         )}
 
         {!revealed ? (

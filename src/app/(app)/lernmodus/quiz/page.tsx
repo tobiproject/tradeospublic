@@ -1,6 +1,6 @@
 import { QuizSession } from '@/components/lernmodus/quiz/QuizSession'
 
-export const metadata = { title: 'Quiz-Modus — Trade OS' }
+export const metadata = { title: 'Quiz-Modus — NOUS' }
 
 export default function QuizPage() {
   return (

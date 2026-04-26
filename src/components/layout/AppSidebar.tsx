@@ -43,7 +43,7 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'knowledge-base',  href: '/knowledge-base',  label: 'Knowledge Base',  icon: BookMarked, kbd: null },
 ]
 
-const STORAGE_KEY = 'tradeos-sidebar-order'
+const STORAGE_KEY = 'nous-sidebar-order'
 
 function loadOrder(): string[] {
   if (typeof window === 'undefined') return []
@@ -171,7 +171,7 @@ export function AppSidebar() {
   useEffect(() => {
     const check = () => {
       const today = new Date().toISOString().split('T')[0]
-      setHasTodayPlan(!!localStorage.getItem(`tradeos-morning-${today}`))
+      setHasTodayPlan(!!localStorage.getItem(`nous-morning-${today}`))
     }
     check()
     // Re-check every 10s so the dot appears immediately after completing the briefing
@@ -213,7 +213,7 @@ export function AppSidebar() {
           className="font-bold text-[15px] tracking-tight"
           style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--fg-1)' }}
         >
-          TradeOS
+          NOUS
         </span>
       </div>
 

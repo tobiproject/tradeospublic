@@ -1,6 +1,6 @@
 import { CoachPage } from '@/components/lernmodus/coach/CoachPage'
 
-export const metadata = { title: 'KI-Coach — Trade OS' }
+export const metadata = { title: 'KI-Coach — NOUS' }
 
 export default function CoachRoute() {
   return (

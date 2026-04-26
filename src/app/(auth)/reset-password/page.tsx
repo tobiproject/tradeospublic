@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm'
 
 export const metadata: Metadata = {
-  title: 'Passwort zurücksetzen — Trade OS',
+  title: 'Passwort zurücksetzen — NOUS',
 }
 
 export default function ResetPasswordPage() {
