@@ -2,31 +2,198 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
 import {
   LayoutDashboard, BookOpen, TrendingUp, Brain, ShieldCheck,
-  CalendarDays, ClipboardList, GraduationCap, Wallet, Settings,
-  LogOut, Plus, BarChart2,
+  CalendarDays, ClipboardList, GraduationCap, Wallet,
+  LogOut, Plus, GripVertical,
 } from 'lucide-react'
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
 import { AccountSwitcher } from '@/components/accounts/AccountSwitcher'
 import { useAuth } from '@/hooks/useAuth'
+import { useAccountContext } from '@/contexts/AccountContext'
+import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
-const NAV_ITEMS = [
-  { href: '/dashboard',   label: 'Dashboard',   icon: LayoutDashboard, kbd: 'G D' },
-  { href: '/journal',     label: 'Journal',      icon: BookOpen,        kbd: 'G J' },
-  { href: '/performance', label: 'Performance',  icon: TrendingUp,      kbd: 'G P' },
-  { href: '/analysen',    label: 'Analysen',     icon: Brain,           kbd: 'G A' },
-  { href: '/risk',        label: 'Risk',         icon: ShieldCheck,     kbd: 'G R' },
-  { href: '/kalender',    label: 'Kalender',     icon: CalendarDays,    kbd: null  },
-  { href: '/tagesplan',   label: 'Tagesplan',    icon: ClipboardList,   kbd: null  },
-  { href: '/lernmodus',   label: 'Lernen',       icon: GraduationCap,   kbd: null  },
-  { href: '/accounts',    label: 'Konten',       icon: Wallet,          kbd: null  },
+const DEFAULT_NAV_ITEMS = [
+  { id: 'dashboard',   href: '/dashboard',   label: 'Dashboard',   icon: LayoutDashboard, kbd: 'G D' },
+  { id: 'journal',     href: '/journal',     label: 'Journal',     icon: BookOpen,        kbd: 'G J' },
+  { id: 'performance', href: '/performance', label: 'Performance', icon: TrendingUp,      kbd: 'G P' },
+  { id: 'analysen',    href: '/analysen',    label: 'Analysen',    icon: Brain,           kbd: 'G A' },
+  { id: 'risk',        href: '/risk',        label: 'Risk',        icon: ShieldCheck,     kbd: 'G R' },
+  { id: 'kalender',    href: '/kalender',    label: 'Kalender',    icon: CalendarDays,    kbd: null  },
+  { id: 'tagesplan',   href: '/tagesplan',   label: 'Tagesplan',   icon: ClipboardList,   kbd: null  },
+  { id: 'lernmodus',   href: '/lernmodus',   label: 'Lernen',      icon: GraduationCap,   kbd: null  },
+  { id: 'accounts',    href: '/accounts',    label: 'Konten',      icon: Wallet,          kbd: null  },
 ]
+
+const STORAGE_KEY = 'tradeos-sidebar-order'
+
+function loadOrder(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveOrder(ids: string[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+  } catch {}
+}
+
+function applyOrder(items: typeof DEFAULT_NAV_ITEMS, order: string[]) {
+  if (!order.length) return items
+  const map = new Map(items.map(i => [i.id, i]))
+  const ordered = order.flatMap(id => {
+    const item = map.get(id)
+    return item ? [item] : []
+  })
+  // append any new items not yet in saved order
+  const known = new Set(order)
+  items.forEach(i => { if (!known.has(i.id)) ordered.push(i) })
+  return ordered
+}
+
+interface NavItemProps {
+  item: typeof DEFAULT_NAV_ITEMS[0]
+  isActive: boolean
+  hasTodayPlan?: boolean
+}
+
+function SortableNavItem({ item, isActive, hasTodayPlan }: NavItemProps) {
+  const [hovered, setHovered] = useState(false)
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  const showTagesplanDot = item.id === 'tagesplan' && hasTodayPlan
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Drag handle — only visible on hover */}
+      <button
+        {...attributes}
+        {...listeners}
+        tabIndex={-1}
+        className="flex items-center justify-center w-4 h-6 shrink-0 cursor-grab active:cursor-grabbing ml-1"
+        style={{
+          color: 'var(--fg-4)',
+          opacity: hovered ? 1 : 0,
+          transition: 'opacity 100ms',
+        }}
+      >
+        <GripVertical className="h-3 w-3" />
+      </button>
+
+      <Link
+        href={item.href}
+        className={cn(
+          'flex flex-1 items-center gap-2.5 px-2 py-1.5 rounded text-[13px] transition-colors duration-100',
+          isActive ? 'font-semibold' : 'font-medium'
+        )}
+        style={{
+          background: isActive ? 'var(--bg-3)' : hovered ? 'var(--bg-3)' : 'transparent',
+          color: isActive ? 'var(--fg-1)' : 'var(--fg-2)',
+        }}
+      >
+        <item.icon className="h-4 w-4 shrink-0" />
+        <span className="flex-1">{item.label}</span>
+
+        {/* Tagesplan completion dot */}
+        {showTagesplanDot && (
+          <span
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ background: 'var(--long)' }}
+          />
+        )}
+
+        {item.kbd && !showTagesplanDot && (
+          <span className="text-[10px] font-mono" style={{ color: 'var(--fg-4)' }}>
+            {item.kbd}
+          </span>
+        )}
+      </Link>
+    </div>
+  )
+}
 
 export function AppSidebar() {
   const pathname = usePathname()
   const { logout } = useAuth()
+  const { activeAccount } = useAccountContext()
+  const [navItems, setNavItems] = useState(DEFAULT_NAV_ITEMS)
+  const [hasTodayPlan, setHasTodayPlan] = useState(false)
+
+  // Restore saved order from localStorage (client-side only)
+  useEffect(() => {
+    const order = loadOrder()
+    if (order.length) setNavItems(applyOrder(DEFAULT_NAV_ITEMS, order))
+  }, [])
+
+  // Check if today's Tagesplan exists
+  useEffect(() => {
+    if (!activeAccount) return
+    const supabase = createClient()
+    const today = new Date().toISOString().split('T')[0]
+    supabase
+      .from('daily_plans')
+      .select('id')
+      .eq('account_id', activeAccount.id)
+      .eq('plan_date', today)
+      .maybeSingle()
+      .then(({ data }) => setHasTodayPlan(!!data))
+  }, [activeAccount?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  )
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setNavItems(prev => {
+      const oldIdx = prev.findIndex(i => i.id === active.id)
+      const newIdx = prev.findIndex(i => i.id === over.id)
+      const next = arrayMove(prev, oldIdx, newIdx)
+      saveOrder(next.map(i => i.id))
+      return next
+    })
+  }, [])
 
   return (
     <aside
@@ -64,44 +231,26 @@ export function AppSidebar() {
         </Button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-0.5 px-2 overflow-y-auto">
-        {NAV_ITEMS.map(({ href, label, icon: Icon, kbd }) => {
-          const isActive = pathname === href || pathname.startsWith(href + '/')
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'flex items-center gap-2.5 px-2.5 py-1.5 rounded text-[13px] transition-colors duration-100',
-                isActive
-                  ? 'font-semibold'
-                  : 'font-medium hover:text-foreground'
-              )}
-              style={{
-                background: isActive ? 'var(--bg-3)' : 'transparent',
-                color: isActive ? 'var(--fg-1)' : 'var(--fg-2)',
-              }}
-              onMouseEnter={e => {
-                if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'
-              }}
-              onMouseLeave={e => {
-                if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'
-              }}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="flex-1">{label}</span>
-              {kbd && (
-                <span
-                  className="text-[10px] font-mono"
-                  style={{ color: 'var(--fg-4)' }}
-                >
-                  {kbd}
-                </span>
-              )}
-            </Link>
-          )
-        })}
+      {/* Navigation — draggable */}
+      <nav className="flex-1 flex flex-col gap-0 px-1 overflow-y-auto">
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <SortableContext
+            items={navItems.map(i => i.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {navItems.map(item => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              return (
+                <SortableNavItem
+                  key={item.id}
+                  item={item}
+                  isActive={isActive}
+                  hasTodayPlan={hasTodayPlan}
+                />
+              )
+            })}
+          </SortableContext>
+        </DndContext>
       </nav>
 
       {/* Bottom: account + logout */}
@@ -117,11 +266,11 @@ export function AppSidebar() {
           className="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-[13px] w-full text-left transition-colors duration-100"
           style={{ color: 'var(--fg-3)', background: 'transparent' }}
           onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'
+            ;(e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'
             ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-1)'
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent'
+            ;(e.currentTarget as HTMLElement).style.background = 'transparent'
             ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-3)'
           }}
         >
