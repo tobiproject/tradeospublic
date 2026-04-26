@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-
-const client = new Anthropic()
+import { callAI } from '@/lib/ai-client'
 
 export async function POST() {
   const supabase = await createServerSupabaseClient()
@@ -82,13 +80,14 @@ Antworte NUR mit einem JSON-Objekt (kein Markdown, kein Text darum):
   ]
 }`
 
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
+  const aiResponse = await callAI({
+    userId: user.id,
+    system: '',
     messages: [{ role: 'user', content: prompt }],
+    maxTokens: 1024,
   })
 
-  const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+  const raw = (aiResponse.text ?? '').trim()
   let roadmapData: Record<string, unknown>
   try {
     roadmapData = JSON.parse(raw)

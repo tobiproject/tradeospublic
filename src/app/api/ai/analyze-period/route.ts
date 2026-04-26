@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { getAnthropicClient } from '@/lib/anthropic'
+import { callAI } from '@/lib/ai-client'
 import { PERIOD_ANALYSIS_TOOL, buildPeriodPrompt } from '@/lib/ai-prompts'
 import type { Trade } from '@/hooks/useTrades'
 
@@ -78,21 +78,19 @@ async function runPeriodAnalysis(
     for (let attempt = 0; attempt < 3; attempt++) {
       if (attempt > 0) await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000))
       try {
-        const client = getAnthropicClient()
-        const message = await client.messages.create({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1500,
-          tools: [PERIOD_ANALYSIS_TOOL],
-          tool_choice: { type: 'tool', name: 'analyze_period' },
+        const aiResponse = await callAI({
+          userId,
+          system: '',
           messages: [{
             role: 'user',
             content: buildPeriodPrompt(type, periodStart, periodEnd, trades as Trade[], prevStats),
           }],
+          tool: PERIOD_ANALYSIS_TOOL,
+          maxTokens: 1500,
         })
 
-        const toolUse = message.content.find(b => b.type === 'tool_use')
-        if (!toolUse || toolUse.type !== 'tool_use') throw new Error('No tool_use in response')
-        result = toolUse.input
+        if (!aiResponse.toolResult) throw new Error('No tool result in response')
+        result = aiResponse.toolResult
         lastError = null
         break
       } catch (err) {

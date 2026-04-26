@@ -100,7 +100,8 @@ Regeln:
   }
   claudeMessages.push({ role: 'user', content: message })
 
-  const anthropic = getAnthropicClient()
+  const { data: aiSettings } = await supabase.from('user_ai_settings').select('api_key').eq('user_id', user.id).maybeSingle()
+  const anthropic = getAnthropicClient(aiSettings?.api_key)
 
   // Stream the response
   const encoder = new TextEncoder()

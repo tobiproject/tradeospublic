@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { callAI } from '@/lib/ai-client'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getKnowledgeContext } from '@/lib/knowledge-context'
 
@@ -37,11 +37,9 @@ export async function POST() {
 
   const knowledgeContext = await getKnowledgeContext(user.id)
 
-  const client = new Anthropic()
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1500,
-    system: knowledgeContext ?? undefined,
+    const aiResponse = await callAI({
+    userId: user.id,
+    system: knowledgeContext ?? '',
     messages: [{
       role: 'user',
       content: `Du bist ein erfahrener Trading-Coach. Erstelle eine strukturierte Wochenvorbereitung für den Trader basierend auf seinen letzten Trades und seiner Strategie.
@@ -58,8 +56,9 @@ Erstelle eine kompakte Wochenvorbereitung mit diesen Abschnitten:
 
 Halte jeden Abschnitt prägnant. Sprich den Trader direkt an (du-Form).`,
     }],
+    maxTokens: 1500,
   })
 
-  const prep = (message.content[0] as { type: string; text: string }).text
+  const prep = aiResponse.text ?? ''
   return NextResponse.json({ prep })
 }

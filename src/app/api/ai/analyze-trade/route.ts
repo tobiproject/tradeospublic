@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { getAnthropicClient } from '@/lib/anthropic'
+import { callAI } from '@/lib/ai-client'
 import { TRADE_ANALYSIS_TOOL, buildTradePrompt } from '@/lib/ai-prompts'
 import { getKnowledgeContext } from '@/lib/knowledge-context'
 
@@ -77,20 +77,16 @@ async function runAnalysis(
         await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000))
       }
       try {
-        const client = getAnthropicClient()
-        const message = await client.messages.create({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1024,
-          tools: [TRADE_ANALYSIS_TOOL],
-          tool_choice: { type: 'tool', name: 'analyze_trade' },
-          system: knowledgeContext ?? undefined,
+        const aiResponse = await callAI({
+          userId,
+          system: knowledgeContext ?? '',
           messages: [{ role: 'user', content: buildTradePrompt(trade, accountStats, tradingRules) }],
+          tool: TRADE_ANALYSIS_TOOL,
+          maxTokens: 1024,
         })
 
-        const toolUse = message.content.find(b => b.type === 'tool_use')
-        if (!toolUse || toolUse.type !== 'tool_use') throw new Error('No tool_use in response')
-
-        result = toolUse.input as AnalysisResult
+        if (!aiResponse.toolResult) throw new Error('No tool result in response')
+        result = aiResponse.toolResult as AnalysisResult
         lastError = null
         break
       } catch (err) {

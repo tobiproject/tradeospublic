@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { callAI } from '@/lib/ai-client'
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
@@ -10,10 +10,9 @@ export async function POST(req: NextRequest) {
   const { notes } = await req.json()
   if (!notes?.trim()) return NextResponse.json({ error: 'Kein Text vorhanden' }, { status: 400 })
 
-  const client = new Anthropic()
-  const message = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
+  const aiResponse = await callAI({
+    userId: user.id,
+    system: '',
     messages: [{
       role: 'user',
       content: `Du bist ein Trading-Journal-Assistent. Der folgende Text wurde per Spracheingabe (z.B. Wispr Flow) diktiert und enthält typische Diktierfehler, Füllwörter und unstrukturierte Gedanken eines Traders.
@@ -23,8 +22,9 @@ Bereinige den Text: korrigiere Fehler, entferne Füllwörter ("ähm", "also", "i
 Originaltext:
 ${notes}`,
     }],
+    maxTokens: 1024,
   })
 
-  const rewritten = (message.content[0] as { type: string; text: string }).text
+  const rewritten = aiResponse.text ?? ''
   return NextResponse.json({ rewritten })
 }

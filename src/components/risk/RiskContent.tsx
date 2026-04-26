@@ -12,6 +12,7 @@ import { RiskGauge } from './RiskGauge'
 import { RiskAlertBanner } from './RiskAlertBanner'
 import { RiskAlertHistory } from './RiskAlertHistory'
 import { RiskConfigForm } from './RiskConfigForm'
+import { PropFirmSection } from './PropFirmSection'
 
 export function RiskContent() {
   const { activeAccount } = useAccountContext()
@@ -171,6 +172,20 @@ export function RiskContent() {
           )}
 
           <Separator />
+
+          {/* Prop-firm rules (only for prop accounts) */}
+          {activeAccount?.account_type === 'prop' && (
+            <>
+              <div>
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--fg-1)' }}>Prop-Firm Regeln</p>
+                <p className="text-xs mb-3" style={{ color: 'var(--fg-3)' }}>
+                  Grenzen deiner Prop-Firm — werden im Dashboard und Risk-Monitor angezeigt.
+                </p>
+                <PropFirmSection />
+              </div>
+              <Separator />
+            </>
+          )}
 
           {/* Config form */}
           <RiskConfigForm config={config} isSaving={isSaving} onSave={handleSaveConfig} />

@@ -1,9 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-export function getAnthropicClient(): Anthropic {
-  const key = process.env.ANTHROPIC_API_KEY
+// Used by legacy routes that pass the client directly.
+// New routes should use callAI() from @/lib/ai-client instead.
+export function getAnthropicClient(userApiKey?: string | null): Anthropic {
+  const key = userApiKey || process.env.ANTHROPIC_API_KEY
   if (!key) {
-    throw new Error(`ANTHROPIC_API_KEY is not set (env keys available: ${Object.keys(process.env).filter(k => k.startsWith('ANTHROPIC') || k.startsWith('NEXT')).join(', ')})`)
+    throw new Error(`Kein Anthropic API-Key gesetzt. Bitte in Einstellungen → KI-Provider eintragen oder ANTHROPIC_API_KEY in der Umgebung setzen.`)
   }
   return new Anthropic({ apiKey: key })
 }

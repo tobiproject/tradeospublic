@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Trash2, Loader2, Check, Plus, ExternalLink, Brain, Bell, BellOff, Mail } from 'lucide-react'
+import { Trash2, Loader2, Check, Plus, ExternalLink, Brain, Bell, BellOff, Mail, Key, Bot } from 'lucide-react'
 import Link from 'next/link'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { toast } from 'sonner'
@@ -61,6 +61,12 @@ export default function EinstellungenPage() {
   const [notifSaving, setNotifSaving] = useState(false)
   const { permission, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications()
 
+  // AI settings
+  const [aiProvider, setAiProvider] = useState<'anthropic' | 'openai'>('anthropic')
+  const [aiApiKey, setAiApiKey] = useState('')
+  const [aiSaving, setAiSaving] = useState(false)
+  const [aiSaved, setAiSaved] = useState(false)
+
   useEffect(() => {
     fetch('/api/notifications/settings').then(r => r.json()).then(d => {
       setNotifEmailEnabled(d.email_enabled ?? false)
@@ -89,6 +95,25 @@ export default function EinstellungenPage() {
       else if (permission === 'denied') toast.error('Browser hat Benachrichtigungen blockiert — bitte in Browser-Einstellungen erlauben')
     }
   }
+
+  useEffect(() => {
+    fetch('/api/ai-settings').then(r => r.json()).then(d => {
+      setAiProvider(d.provider ?? 'anthropic')
+      setAiApiKey(d.api_key ?? '')
+    })
+  }, [])
+
+  const saveAiSettings = useCallback(async () => {
+    setAiSaving(true)
+    await fetch('/api/ai-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: aiProvider, api_key: aiApiKey || null }),
+    })
+    setAiSaving(false)
+    setAiSaved(true)
+    setTimeout(() => setAiSaved(false), 2500)
+  }, [aiProvider, aiApiKey])
 
   useEffect(() => {
     Promise.all([
@@ -392,41 +417,96 @@ export default function EinstellungenPage() {
             </div>
           </Section>
 
-          {/* Anthropic API Costs */}
-          <Section title="KI-Kosten (Anthropic)" subtitle="NOUS nutzt Claude Sonnet für alle KI-Funktionen — hier deine Kosten im Blick behalten.">
-            <div className="space-y-3">
-              <div
-                className="rounded px-4 py-3 flex items-start gap-3"
-                style={{ background: 'var(--bg-3)', border: '1px solid var(--border-raw)' }}
-              >
-                <Brain className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--brand-blue)' }} />
-                <div className="text-sm space-y-1" style={{ color: 'var(--fg-3)' }}>
-                  <p>Jede KI-Analyse (Trade-Analyse, Roadmap, Wochenvorbereitung) kostet ca. <span style={{ color: 'var(--fg-1)' }}>$0.002–$0.01</span> — bei normalem Nutzungsverhalten unter <span style={{ color: 'var(--fg-1)' }}>$5/Monat</span>.</p>
-                  <p className="text-xs" style={{ color: 'var(--fg-4)' }}>Exakte Kosten und Verbrauch siehst du im Anthropic Console.</p>
-                </div>
-              </div>
+          {/* AI Provider Settings */}
+          <Section title="KI-Provider" subtitle="Eigenen API-Key hinterlegen — NOUS nutzt dann dein Konto statt des Server-Schlüssels.">
+            <div className="space-y-4">
+              {/* Provider toggle */}
               <div className="flex gap-2">
-                <Link
-                  href="https://console.anthropic.com/settings/billing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-opacity hover:opacity-80"
-                  style={{ background: 'var(--brand-blue)', color: '#fff' }}
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Billing & Kosten öffnen
-                </Link>
-                <Link
-                  href="https://console.anthropic.com/settings/usage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-opacity hover:opacity-80"
-                  style={{ background: 'var(--bg-3)', color: 'var(--fg-2)', border: '1px solid var(--border-raw)' }}
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  API Usage ansehen
-                </Link>
+                {(['anthropic', 'openai'] as const).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setAiProvider(p)}
+                    className="flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors"
+                    style={{
+                      background: aiProvider === p ? 'var(--brand-blue)' : 'var(--bg-3)',
+                      color: aiProvider === p ? '#fff' : 'var(--fg-3)',
+                      border: `1px solid ${aiProvider === p ? 'var(--brand-blue)' : 'var(--border-raw)'}`,
+                    }}
+                  >
+                    <Bot className="h-3.5 w-3.5" />
+                    {p === 'anthropic' ? 'Claude (Anthropic)' : 'GPT-4o (OpenAI)'}
+                  </button>
+                ))}
               </div>
+
+              {/* API Key input */}
+              <div className="space-y-1.5">
+                <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+                  {aiProvider === 'anthropic' ? 'Anthropic API-Key' : 'OpenAI API-Key'}
+                  {' '}— wird verschlüsselt gespeichert, nur du kannst ihn lesen.
+                </p>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: 'var(--fg-4)' }} />
+                    <Input
+                      type="password"
+                      value={aiApiKey}
+                      onChange={e => setAiApiKey(e.target.value)}
+                      placeholder={aiProvider === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
+                      className="pl-9"
+                    />
+                  </div>
+                  <Button
+                    onClick={saveAiSettings}
+                    disabled={aiSaving}
+                    className="h-9 px-4 text-sm font-semibold rounded shrink-0"
+                    style={{ background: 'var(--brand-blue)', color: '#fff', border: 'none' }}
+                  >
+                    {aiSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : aiSaved ? <Check className="h-3.5 w-3.5" /> : 'Speichern'}
+                  </Button>
+                </div>
+                {!aiApiKey && (
+                  <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+                    Kein Key hinterlegt — NOUS nutzt den Server-Schlüssel (Shared Budget).
+                  </p>
+                )}
+              </div>
+
+              {/* Cost links — shown for Anthropic */}
+              {aiProvider === 'anthropic' && (
+                <div className="space-y-2">
+                  <div
+                    className="rounded px-4 py-3 flex items-start gap-3"
+                    style={{ background: 'var(--bg-3)', border: '1px solid var(--border-raw)' }}
+                  >
+                    <Brain className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--brand-blue)' }} />
+                    <p className="text-sm" style={{ color: 'var(--fg-3)' }}>
+                      Jede KI-Analyse kostet ca. <span style={{ color: 'var(--fg-1)' }}>$0.002–$0.01</span> — bei normalem Nutzungsverhalten unter <span style={{ color: 'var(--fg-1)' }}>$5/Monat</span>.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-opacity hover:opacity-80"
+                      style={{ background: 'var(--brand-blue)', color: '#fff' }}>
+                      <ExternalLink className="h-3 w-3" /> Billing öffnen
+                    </Link>
+                    <Link href="https://console.anthropic.com/settings/usage" target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-opacity hover:opacity-80"
+                      style={{ background: 'var(--bg-3)', color: 'var(--fg-2)', border: '1px solid var(--border-raw)' }}>
+                      <ExternalLink className="h-3 w-3" /> API Usage
+                    </Link>
+                  </div>
+                </div>
+              )}
+              {aiProvider === 'openai' && (
+                <div className="flex gap-2">
+                  <Link href="https://platform.openai.com/usage" target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-opacity hover:opacity-80"
+                    style={{ background: 'var(--brand-blue)', color: '#fff' }}>
+                    <ExternalLink className="h-3 w-3" /> OpenAI Usage öffnen
+                  </Link>
+                </div>
+              )}
             </div>
           </Section>
 

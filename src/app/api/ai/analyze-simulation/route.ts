@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { getAnthropicClient } from '@/lib/anthropic'
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
@@ -20,7 +20,9 @@ export async function POST(req: NextRequest) {
   const base64Image = Buffer.from(imageBuffer).toString('base64')
   const mediaType = (screenshotFile.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp') || 'image/jpeg'
 
-  const client = new Anthropic()
+  // Vision route — Anthropic only (image analysis)
+  const { data: aiSettings } = await supabase.from('user_ai_settings').select('api_key').eq('user_id', user.id).maybeSingle()
+  const client = getAnthropicClient(aiSettings?.api_key)
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
