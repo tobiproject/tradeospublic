@@ -26,7 +26,6 @@ import { Button } from '@/components/ui/button'
 import { AccountSwitcher } from '@/components/accounts/AccountSwitcher'
 import { useAuth } from '@/hooks/useAuth'
 import { useAccountContext } from '@/contexts/AccountContext'
-import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_NAV_ITEMS = [
@@ -165,19 +164,17 @@ export function AppSidebar() {
     if (order.length) setNavItems(applyOrder(DEFAULT_NAV_ITEMS, order))
   }, [])
 
-  // Check if today's Tagesplan exists
+  // Green dot on Tagesplan = morning briefing fully completed today
   useEffect(() => {
-    if (!activeAccount) return
-    const supabase = createClient()
-    const today = new Date().toISOString().split('T')[0]
-    supabase
-      .from('daily_plans')
-      .select('id')
-      .eq('account_id', activeAccount.id)
-      .eq('plan_date', today)
-      .maybeSingle()
-      .then(({ data }) => setHasTodayPlan(!!data))
-  }, [activeAccount?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+    const check = () => {
+      const today = new Date().toISOString().split('T')[0]
+      setHasTodayPlan(!!localStorage.getItem(`tradeos-morning-${today}`))
+    }
+    check()
+    // Re-check every 10s so the dot appears immediately after completing the briefing
+    const interval = setInterval(check, 10_000)
+    return () => clearInterval(interval)
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
