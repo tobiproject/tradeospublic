@@ -26,10 +26,17 @@
 | PROJ-10 | Lernmodus (Replay, Quiz, KI-Coach) | Deployed | [PROJ-10-lernmodus.md](PROJ-10-lernmodus.md) | 2026-04-23 |
 
 | PROJ-11 | Trading Knowledge Base | Planned | [PROJ-11-knowledge-base.md](PROJ-11-knowledge-base.md) | 2026-04-25 |
+| PROJ-12 | Morning Briefing | Deployed | — | 2026-04-26 |
+| PROJ-13 | Notes AI-Rewrite (Wispr Flow) | Deployed | — | 2026-04-26 |
+| PROJ-14 | Trade Analysis Reminder | Deployed | — | 2026-04-26 |
+| PROJ-15 | Trade Simulation / True RRR | Deployed | — | 2026-04-26 |
+| PROJ-16 | Strategie-Profil (Strategy Storage) | Deployed | — | 2026-04-26 |
+| PROJ-17 | Design System (TradingView DNA) | Deployed | — | 2026-04-26 |
+| PROJ-18 | Draggable Sidebar + Tagesplan Indicator | Deployed | — | 2026-04-26 |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-12
+## Next Available ID: PROJ-19
 
 ## Build Order (Empfohlen)
 
