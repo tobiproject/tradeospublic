@@ -173,19 +173,16 @@ export function RiskContent() {
 
           <Separator />
 
-          {/* Prop-firm rules (only for prop accounts) */}
-          {activeAccount?.account_type === 'prop' && (
-            <>
-              <div>
-                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--fg-1)' }}>Prop-Firm Regeln</p>
-                <p className="text-xs mb-3" style={{ color: 'var(--fg-3)' }}>
-                  Grenzen deiner Prop-Firm — werden im Dashboard und Risk-Monitor angezeigt.
-                </p>
-                <PropFirmSection />
-              </div>
-              <Separator />
-            </>
-          )}
+          {/* Prop-firm rules */}
+          <div>
+            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--fg-1)' }}>Prop-Firm Regeln</p>
+            <p className="text-xs mb-3" style={{ color: 'var(--fg-3)' }}>
+              Tagesverlust-Limit, Max-Drawdown und Profit-Ziel deiner Prop-Firm — werden als Fortschrittsbalken angezeigt.
+            </p>
+            <PropFirmSection />
+          </div>
+
+          <Separator />
 
           {/* Config form */}
           <RiskConfigForm config={config} isSaving={isSaving} onSave={handleSaveConfig} />
