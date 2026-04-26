@@ -30,6 +30,10 @@ export interface Trade {
   notes: string | null
   screenshot_urls: string[]
   chart_url: string | null
+  review_notes: string | null
+  what_went_well: string | null
+  what_to_improve: string | null
+  lesson_learned: string | null
   news_event_present: boolean | null
   news_event_name: string | null
   news_impact_level: 'high' | 'medium' | 'low' | null

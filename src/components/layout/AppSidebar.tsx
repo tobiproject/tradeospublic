@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   LayoutDashboard, BookOpen, TrendingUp, Brain, ShieldCheck,
   CalendarDays, ClipboardList, GraduationCap, Settings,
-  LogOut, Plus, GripVertical, Star,
+  LogOut, Plus, GripVertical, Star, Map as MapIcon, Telescope,
 } from 'lucide-react'
 import {
   DndContext,
@@ -34,10 +34,12 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'performance', href: '/performance', label: 'Performance', icon: TrendingUp,      kbd: 'G P' },
   { id: 'analysen',    href: '/analysen',    label: 'Analysen',    icon: Brain,           kbd: 'G A' },
   { id: 'risk',        href: '/risk',        label: 'Risk',        icon: ShieldCheck,     kbd: 'G R' },
-  { id: 'kalender',  href: '/kalender',  label: 'Kalender', icon: CalendarDays,  kbd: null },
-  { id: 'tagesplan', href: '/tagesplan', label: 'Tagesplan', icon: ClipboardList, kbd: null },
+  { id: 'wochenvorbereitung', href: '/wochenvorbereitung', label: 'Wochenvorbereitung', icon: Telescope,    kbd: null },
+  { id: 'kalender',           href: '/kalender',           label: 'Kalender',           icon: CalendarDays,  kbd: null },
+  { id: 'tagesplan',          href: '/tagesplan',          label: 'Tagesplan',           icon: ClipboardList, kbd: null },
   { id: 'lernmodus',  href: '/lernmodus',  label: 'Lernen',     icon: GraduationCap, kbd: null },
-  { id: 'watchlist',  href: '/watchlist',  label: 'Watchlist',  icon: Star,          kbd: null },
+  { id: 'watchlist',  href: '/watchlist',  label: 'Watchlist',   icon: Star,          kbd: null },
+  { id: 'roadmap',    href: '/roadmap',    label: 'Roadmap',     icon: MapIcon,       kbd: null },
 ]
 
 const STORAGE_KEY = 'tradeos-sidebar-order'
