@@ -1,15 +1,23 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { Trash2, Loader2, Check, Plus, ExternalLink, Brain, Bell, BellOff, Mail, Key, Bot } from 'lucide-react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { Trash2, Loader2, Check, Plus, ExternalLink, Brain, Bell, BellOff, Mail, Key, Bot, Archive } from 'lucide-react'
 import Link from 'next/link'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { useAccounts } from '@/hooks/useAccounts'
+import { type Account } from '@/contexts/AccountContext'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AssetMultiPicker } from '@/components/watchlist/AssetMultiPicker'
+import { AccountCard } from '@/components/accounts/AccountCard'
+import { AccountCreateDialog } from '@/components/accounts/AccountCreateDialog'
+import { AccountDeleteDialog } from '@/components/accounts/AccountDeleteDialog'
 
 interface Strategy {
   name: string
@@ -47,7 +55,24 @@ const EXAMPLE_STRATEGY: Strategy = {
 
 const TIMEFRAME_OPTIONS = ['1m', '5m', '15m', '30m', '1h', '4h', 'D', 'W']
 
-export default function EinstellungenPage() {
+function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+  return (
+    <div
+      className="rounded-lg p-5 space-y-3"
+      style={{ background: 'var(--bg-2)', border: '1px solid var(--border-raw)' }}
+    >
+      <div>
+        <p className="text-sm font-semibold" style={{ color: 'var(--fg-1)' }}>{title}</p>
+        {subtitle && <p className="text-xs mt-0.5" style={{ color: 'var(--fg-3)' }}>{subtitle}</p>}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+// ─── Tab: Strategie ─────────────────────────────────────────────────────────
+
+function StrategieTab() {
   const [strategy, setStrategy] = useState<Strategy>(EMPTY)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -56,64 +81,6 @@ export default function EinstellungenPage() {
   const [displayName, setDisplayName] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
   const [nameSaved, setNameSaved] = useState(false)
-  const [notifEmail, setNotifEmail] = useState('')
-  const [notifEmailEnabled, setNotifEmailEnabled] = useState(false)
-  const [notifSaving, setNotifSaving] = useState(false)
-  const { permission, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications()
-
-  // AI settings
-  const [aiProvider, setAiProvider] = useState<'anthropic' | 'openai'>('anthropic')
-  const [aiApiKey, setAiApiKey] = useState('')
-  const [aiSaving, setAiSaving] = useState(false)
-  const [aiSaved, setAiSaved] = useState(false)
-
-  useEffect(() => {
-    fetch('/api/notifications/settings').then(r => r.json()).then(d => {
-      setNotifEmailEnabled(d.email_enabled ?? false)
-      setNotifEmail(d.email_address ?? '')
-    })
-  }, [])
-
-  const saveNotifSettings = useCallback(async () => {
-    setNotifSaving(true)
-    await fetch('/api/notifications/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email_enabled: notifEmailEnabled, email_address: notifEmail }),
-    })
-    setNotifSaving(false)
-    toast.success('Einstellungen gespeichert')
-  }, [notifEmailEnabled, notifEmail])
-
-  const handlePushToggle = async () => {
-    if (subscribed || permission === 'granted') {
-      await unsubscribe()
-      toast.success('Push-Benachrichtigungen deaktiviert')
-    } else {
-      const ok = await subscribe()
-      if (ok) toast.success('Push-Benachrichtigungen aktiviert')
-      else if (permission === 'denied') toast.error('Browser hat Benachrichtigungen blockiert — bitte in Browser-Einstellungen erlauben')
-    }
-  }
-
-  useEffect(() => {
-    fetch('/api/ai-settings').then(r => r.json()).then(d => {
-      setAiProvider(d.provider ?? 'anthropic')
-      setAiApiKey(d.api_key ?? '')
-    })
-  }, [])
-
-  const saveAiSettings = useCallback(async () => {
-    setAiSaving(true)
-    await fetch('/api/ai-settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider: aiProvider, api_key: aiApiKey || null }),
-    })
-    setAiSaving(false)
-    setAiSaved(true)
-    setTimeout(() => setAiSaved(false), 2500)
-  }, [aiProvider, aiApiKey])
 
   useEffect(() => {
     Promise.all([
@@ -177,29 +144,23 @@ export default function EinstellungenPage() {
         : [...s.preferred_timeframes, tf],
     }))
 
+  if (loading) return (
+    <div className="space-y-4">
+      {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}
+    </div>
+  )
 
   return (
-    <div className="space-y-8 max-w-2xl">
-      {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="eyebrow mb-1">Konfiguration</div>
-          <h1
-            className="text-2xl font-bold tracking-tight"
-            style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--fg-1)' }}
-          >
-            Strategie-Profil
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--fg-3)' }}>
-            Definiere deine Trading-Strategie — die KI nutzt dieses Profil für alle Analysen.
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm" style={{ color: 'var(--fg-3)' }}>
+          Definiere deine Trading-Strategie — die KI nutzt dieses Profil für alle Analysen.
+        </p>
+        <div className="flex gap-2 shrink-0">
           <Button
             onClick={() => setStrategy(EXAMPLE_STRATEGY)}
             className="h-8 px-3 text-[13px] font-semibold rounded"
             style={{ background: 'var(--bg-3)', color: 'var(--fg-2)', border: '1px solid var(--border-raw)' }}
-            title="Befüllt das Formular mit einer Beispielstrategie — du kannst sie danach anpassen oder löschen"
           >
             Beispiel laden
           </Button>
@@ -215,310 +176,491 @@ export default function EinstellungenPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="space-y-4">
-          {[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}
+      <Section title="Dein Profil" subtitle="Wird für personalisierte Begrüßungen und KI-Kontext verwendet">
+        <div className="flex gap-2">
+          <Input
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+            placeholder="Wie soll dich NOUS nennen? z.B. Tobi"
+            className="flex-1"
+          />
+          <Button
+            onClick={saveName}
+            disabled={nameSaving}
+            className="h-8 px-4 text-[13px] font-semibold rounded shrink-0"
+            style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
+          >
+            {nameSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : nameSaved ? <Check className="h-4 w-4" /> : 'Speichern'}
+          </Button>
+        </div>
+      </Section>
+
+      <Section title="Strategie-Name">
+        <Input
+          value={strategy.name}
+          onChange={e => setStrategy(s => ({ ...s, name: e.target.value }))}
+          placeholder="z.B. Trend-Following mit Breakout-Entries"
+        />
+      </Section>
+
+      <Section title="Beschreibung" subtitle="Kurze Zusammenfassung deines Ansatzes">
+        <Textarea
+          rows={4}
+          value={strategy.description}
+          onChange={e => setStrategy(s => ({ ...s, description: e.target.value }))}
+          placeholder="Beschreibe deinen Trading-Stil, Ansatz und Philosophie…"
+          className="resize-none"
+        />
+      </Section>
+
+      <Section title="Trading-Regeln" subtitle="Konkrete Regeln, die dein Setup definieren">
+        <div className="space-y-2">
+          {strategy.rules.map((rule, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-2 rounded px-3 py-2"
+              style={{ background: 'var(--bg-3)' }}
+            >
+              <span className="num text-xs shrink-0 mt-0.5" style={{ color: 'var(--fg-4)' }}>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className="text-sm flex-1" style={{ color: 'var(--fg-1)' }}>{rule}</span>
+              <button onClick={() => removeRule(i)}>
+                <Trash2 className="h-3.5 w-3.5" style={{ color: 'var(--fg-4)' }} />
+              </button>
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <Input
+              value={newRule}
+              onChange={e => setNewRule(e.target.value)}
+              placeholder="Neue Regel hinzufügen…"
+              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addRule())}
+            />
+            <Button
+              type="button"
+              onClick={addRule}
+              className="h-8 px-3 shrink-0 rounded"
+              style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Bevorzugte Timeframes">
+        <div className="flex flex-wrap gap-2">
+          {TIMEFRAME_OPTIONS.map(tf => {
+            const active = strategy.preferred_timeframes.includes(tf)
+            return (
+              <button
+                key={tf}
+                onClick={() => toggleTF(tf)}
+                className="num text-xs font-semibold px-3 py-1.5 rounded transition-colors"
+                style={{
+                  background: active ? 'var(--brand-blue)' : 'var(--bg-3)',
+                  color: active ? '#fff' : 'var(--fg-2)',
+                  border: `1px solid ${active ? 'var(--brand-blue)' : 'var(--border-raw)'}`,
+                }}
+              >
+                {tf}
+              </button>
+            )
+          })}
+        </div>
+      </Section>
+
+      <Section title="Instrumente / Märkte" subtitle="Welche Assets tradest du? Aus deiner Watchlist wählen.">
+        <AssetMultiPicker
+          value={strategy.instruments}
+          onChange={instruments => setStrategy(s => ({ ...s, instruments }))}
+          placeholder="Asset aus Watchlist…"
+        />
+      </Section>
+    </div>
+  )
+}
+
+// ─── Tab: Konten ─────────────────────────────────────────────────────────────
+
+function KontenTab() {
+  const { accounts, activeAccount, isLoading, setActiveAccount, archiveAccount, deleteAccount } = useAccounts()
+  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null)
+  const [archiveError, setArchiveError] = useState<string | null>(null)
+
+  async function handleArchive(account: Account) {
+    setArchiveError(null)
+    const { error } = await archiveAccount(account.id)
+    if (error) {
+      setArchiveError(error.message)
+    } else {
+      toast.success(`„${account.name}" archiviert.`)
+    }
+  }
+
+  async function handleDelete(accountId: string) {
+    const { error } = await deleteAccount(accountId)
+    if (error) {
+      toast.error('Konto konnte nicht gelöscht werden.')
+    } else {
+      toast.success('Konto gelöscht.')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm" style={{ color: 'var(--fg-3)' }}>
+          {accounts.length}/10 Konten · Klick auf ein Konto, um es zu aktivieren.
+        </p>
+        <AccountCreateDialog />
+      </div>
+
+      {archiveError && (
+        <Alert variant="destructive">
+          <AlertDescription>{archiveError}</AlertDescription>
+        </Alert>
+      )}
+
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-48 rounded-lg" />)}
+        </div>
+      ) : accounts.length === 0 ? (
+        <div
+          className="rounded-lg border border-dashed p-12 text-center space-y-4"
+          style={{ borderColor: 'var(--border-raw)' }}
+        >
+          <p className="text-sm" style={{ color: 'var(--fg-3)' }}>Noch kein Konto angelegt.</p>
+          <AccountCreateDialog
+            trigger={
+              <Button
+                variant="outline"
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Erstes Konto erstellen
+              </Button>
+            }
+          />
         </div>
       ) : (
-        <div className="space-y-6">
-
-          {/* Profile */}
-          <Section title="Dein Profil" subtitle="Wird für personalisierte Begrüßungen und KI-Kontext verwendet">
-            <div className="flex gap-2">
-              <Input
-                value={displayName}
-                onChange={e => setDisplayName(e.target.value)}
-                placeholder="Wie soll dich NOUS nennen? z.B. Tobi"
-                className="flex-1"
-              />
-              <Button
-                onClick={saveName}
-                disabled={nameSaving}
-                className="h-8 px-4 text-[13px] font-semibold rounded shrink-0"
-                style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
-              >
-                {nameSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : nameSaved ? <Check className="h-4 w-4" /> : 'Speichern'}
-              </Button>
-            </div>
-          </Section>
-
-          {/* KI-Provider */}
-          <Section title="KI-Provider" subtitle="Eigenen API-Key hinterlegen — NOUS nutzt dann dein Konto statt des Server-Schlüssels.">
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                {(['anthropic', 'openai'] as const).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setAiProvider(p)}
-                    className="flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors"
-                    style={{
-                      background: aiProvider === p ? 'var(--brand-blue)' : 'var(--bg-3)',
-                      color: aiProvider === p ? '#fff' : 'var(--fg-3)',
-                      border: `1px solid ${aiProvider === p ? 'var(--brand-blue)' : 'var(--border-raw)'}`,
-                    }}
-                  >
-                    <Bot className="h-3.5 w-3.5" />
-                    {p === 'anthropic' ? 'Claude (Anthropic)' : 'GPT-4o (OpenAI)'}
-                  </button>
-                ))}
-              </div>
-
-              <div className="space-y-1.5">
-                <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
-                  {aiProvider === 'anthropic' ? 'Anthropic API-Key' : 'OpenAI API-Key'}
-                  {' '}— wird nur in deiner DB-Row gespeichert, nur du kannst ihn lesen.
-                </p>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: 'var(--fg-4)' }} />
-                    <Input
-                      type="password"
-                      value={aiApiKey}
-                      onChange={e => setAiApiKey(e.target.value)}
-                      placeholder={aiProvider === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
-                      className="pl-9"
-                    />
-                  </div>
-                  <Button
-                    onClick={saveAiSettings}
-                    disabled={aiSaving}
-                    className="h-9 px-4 text-sm font-semibold rounded shrink-0"
-                    style={{ background: 'var(--brand-blue)', color: '#fff', border: 'none' }}
-                  >
-                    {aiSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : aiSaved ? <Check className="h-3.5 w-3.5" /> : 'Speichern'}
-                  </Button>
-                </div>
-                {!aiApiKey && (
-                  <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
-                    Kein eigener Key — NOUS nutzt den Server-Schlüssel (Shared Budget).
-                  </p>
-                )}
-              </div>
-
-              {aiProvider === 'anthropic' && (
-                <div className="space-y-2">
-                  <div className="rounded px-4 py-3 flex items-start gap-3" style={{ background: 'var(--bg-3)', border: '1px solid var(--border-raw)' }}>
-                    <Brain className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--brand-blue)' }} />
-                    <p className="text-sm" style={{ color: 'var(--fg-3)' }}>
-                      Jede KI-Analyse kostet ca. <span style={{ color: 'var(--fg-1)' }}>$0.002–$0.01</span> — bei normalem Nutzungsverhalten unter <span style={{ color: 'var(--fg-1)' }}>$5/Monat</span>.
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold hover:opacity-80"
-                      style={{ background: 'var(--brand-blue)', color: '#fff' }}>
-                      <ExternalLink className="h-3 w-3" /> Billing öffnen
-                    </Link>
-                    <Link href="https://console.anthropic.com/settings/usage" target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold hover:opacity-80"
-                      style={{ background: 'var(--bg-3)', color: 'var(--fg-2)', border: '1px solid var(--border-raw)' }}>
-                      <ExternalLink className="h-3 w-3" /> API Usage
-                    </Link>
-                  </div>
-                </div>
-              )}
-              {aiProvider === 'openai' && (
-                <Link href="https://platform.openai.com/usage" target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold hover:opacity-80"
-                  style={{ background: 'var(--brand-blue)', color: '#fff' }}>
-                  <ExternalLink className="h-3 w-3" /> OpenAI Usage öffnen
-                </Link>
-              )}
-            </div>
-          </Section>
-
-          {/* Strategy Name */}
-          <Section title="Strategie-Name">
-            <Input
-              value={strategy.name}
-              onChange={e => setStrategy(s => ({ ...s, name: e.target.value }))}
-              placeholder="z.B. Trend-Following mit Breakout-Entries"
+        <div className="grid gap-4 sm:grid-cols-2">
+          {accounts.map(account => (
+            <AccountCard
+              key={account.id}
+              account={account}
+              isActive={account.id === activeAccount?.id}
+              onSelect={setActiveAccount}
+              onArchive={handleArchive}
+              onDelete={acc => setAccountToDelete(acc)}
             />
-          </Section>
+          ))}
+        </div>
+      )}
 
-          {/* Description */}
-          <Section title="Beschreibung" subtitle="Kurze Zusammenfassung deines Ansatzes">
-            <Textarea
-              rows={4}
-              value={strategy.description}
-              onChange={e => setStrategy(s => ({ ...s, description: e.target.value }))}
-              placeholder="Beschreibe deinen Trading-Stil, Ansatz und Philosophie…"
-              className="resize-none"
-            />
-          </Section>
+      <AccountDeleteDialog
+        account={accountToDelete}
+        onConfirm={handleDelete}
+        onClose={() => setAccountToDelete(null)}
+      />
 
-          {/* Trading Rules */}
-          <Section title="Trading-Regeln" subtitle="Konkrete Regeln, die dein Setup definieren">
-            <div className="space-y-2">
-              {strategy.rules.map((rule, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2 rounded px-3 py-2"
-                  style={{ background: 'var(--bg-3)' }}
-                >
-                  <span className="num text-xs shrink-0 mt-0.5" style={{ color: 'var(--fg-4)' }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="text-sm flex-1" style={{ color: 'var(--fg-1)' }}>{rule}</span>
-                  <button onClick={() => removeRule(i)}>
-                    <Trash2 className="h-3.5 w-3.5" style={{ color: 'var(--fg-4)' }} />
-                  </button>
-                </div>
-              ))}
-              <div className="flex gap-2">
-                <Input
-                  value={newRule}
-                  onChange={e => setNewRule(e.target.value)}
-                  placeholder="Neue Regel hinzufügen…"
-                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addRule())}
-                />
-                <Button
-                  type="button"
-                  onClick={addRule}
-                  className="h-8 px-3 shrink-0 rounded"
-                  style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </Section>
-
-          {/* Timeframes */}
-          <Section title="Bevorzugte Timeframes">
-            <div className="flex flex-wrap gap-2">
-              {TIMEFRAME_OPTIONS.map(tf => {
-                const active = strategy.preferred_timeframes.includes(tf)
-                return (
-                  <button
-                    key={tf}
-                    onClick={() => toggleTF(tf)}
-                    className="num text-xs font-semibold px-3 py-1.5 rounded transition-colors"
-                    style={{
-                      background: active ? 'var(--brand-blue)' : 'var(--bg-3)',
-                      color: active ? '#fff' : 'var(--fg-2)',
-                      border: `1px solid ${active ? 'var(--brand-blue)' : 'var(--border-raw)'}`,
-                    }}
-                  >
-                    {tf}
-                  </button>
-                )
-              })}
-            </div>
-          </Section>
-
-          {/* Instruments */}
-          <Section title="Instrumente / Märkte" subtitle="Welche Assets tradest du? Aus deiner Watchlist wählen.">
-            <AssetMultiPicker
-              value={strategy.instruments}
-              onChange={instruments => setStrategy(s => ({ ...s, instruments }))}
-              placeholder="Asset aus Watchlist…"
-            />
-          </Section>
-
-          {/* Notifications */}
-          <Section title="Benachrichtigungen" subtitle="Erinnerungen für Wochenvorbereitung — samstags & sonntags 9:00 Uhr">
-            <div className="space-y-4">
-              {/* Push */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  {(subscribed || permission === 'granted') ? (
-                    <Bell className="h-4 w-4" style={{ color: 'var(--long)' }} />
-                  ) : (
-                    <BellOff className="h-4 w-4" style={{ color: 'var(--fg-4)' }} />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: 'var(--fg-1)' }}>Browser Push</p>
-                    <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
-                      {permission === 'denied'
-                        ? 'Vom Browser blockiert — in Browser-Einstellungen erlauben'
-                        : permission === 'unsupported'
-                        ? 'Von diesem Browser nicht unterstützt'
-                        : subscribed || permission === 'granted'
-                        ? 'Aktiv — du erhältst Samstag & Sonntag eine Erinnerung'
-                        : 'Einmalige Browser-Erlaubnis nötig'}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={handlePushToggle}
-                  disabled={pushLoading || permission === 'denied' || permission === 'unsupported'}
-                  className="h-8 px-3 text-xs font-semibold rounded shrink-0"
-                  style={{
-                    background: (subscribed || permission === 'granted') ? 'var(--bg-3)' : 'var(--brand-blue)',
-                    color: (subscribed || permission === 'granted') ? 'var(--fg-2)' : '#fff',
-                    border: (subscribed || permission === 'granted') ? '1px solid var(--border-raw)' : 'none',
-                  }}
-                >
-                  {pushLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
-                    (subscribed || permission === 'granted') ? 'Deaktivieren' : 'Aktivieren'}
-                </Button>
-              </div>
-
-              {/* Divider */}
-              <div style={{ borderTop: '1px solid var(--border-raw)' }} />
-
-              {/* Email */}
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2.5">
-                  <Mail className="h-4 w-4" style={{ color: notifEmailEnabled ? 'var(--brand-blue)' : 'var(--fg-4)' }} />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium" style={{ color: 'var(--fg-1)' }}>E-Mail Erinnerung</p>
-                    <p className="text-xs" style={{ color: 'var(--fg-4)' }}>Benötigt einen konfigurierten Resend-Key (RESEND_API_KEY)</p>
-                  </div>
-                  <button
-                    onClick={() => setNotifEmailEnabled(v => !v)}
-                    className="w-10 h-5 rounded-full transition-colors shrink-0 relative"
-                    style={{ background: notifEmailEnabled ? 'var(--brand-blue)' : 'var(--bg-4)' }}
-                  >
-                    <span
-                      className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
-                      style={{
-                        background: '#fff',
-                        left: notifEmailEnabled ? '22px' : '2px',
-                      }}
-                    />
-                  </button>
-                </div>
-                {notifEmailEnabled && (
-                  <Input
-                    type="email"
-                    value={notifEmail}
-                    onChange={e => setNotifEmail(e.target.value)}
-                    placeholder="deine@email.de"
-                  />
-                )}
-              </div>
-
-              <Button
-                onClick={saveNotifSettings}
-                disabled={notifSaving}
-                className="h-8 px-3 text-xs font-semibold rounded"
-                style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
-              >
-                {notifSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
-                Speichern
-              </Button>
-            </div>
-          </Section>
-
+      {/* Archive info */}
+      {accounts.length > 0 && (
+        <div className="flex items-start gap-2 rounded px-4 py-3" style={{ background: 'var(--bg-2)', border: '1px solid var(--border-raw)' }}>
+          <Archive className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--fg-4)' }} />
+          <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+            Archivierte Konten werden aus dem aktiven Wechsler entfernt, aber alle Trades bleiben erhalten und können exportiert werden.
+          </p>
         </div>
       )}
     </div>
   )
 }
 
-function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+// ─── Tab: KI & System ────────────────────────────────────────────────────────
+
+function KiSystemTab() {
+  const [aiProvider, setAiProvider] = useState<'anthropic' | 'openai'>('anthropic')
+  const [aiApiKey, setAiApiKey] = useState('')
+  const [aiSaving, setAiSaving] = useState(false)
+  const [aiSaved, setAiSaved] = useState(false)
+  const [notifEmail, setNotifEmail] = useState('')
+  const [notifEmailEnabled, setNotifEmailEnabled] = useState(false)
+  const [notifSaving, setNotifSaving] = useState(false)
+  const { permission, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications()
+
+  useEffect(() => {
+    fetch('/api/ai-settings').then(r => r.json()).then(d => {
+      setAiProvider(d.provider ?? 'anthropic')
+      setAiApiKey(d.api_key ?? '')
+    })
+    fetch('/api/notifications/settings').then(r => r.json()).then(d => {
+      setNotifEmailEnabled(d.email_enabled ?? false)
+      setNotifEmail(d.email_address ?? '')
+    })
+  }, [])
+
+  const saveAiSettings = useCallback(async () => {
+    setAiSaving(true)
+    await fetch('/api/ai-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: aiProvider, api_key: aiApiKey || null }),
+    })
+    setAiSaving(false)
+    setAiSaved(true)
+    setTimeout(() => setAiSaved(false), 2500)
+  }, [aiProvider, aiApiKey])
+
+  const saveNotifSettings = useCallback(async () => {
+    setNotifSaving(true)
+    await fetch('/api/notifications/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email_enabled: notifEmailEnabled, email_address: notifEmail }),
+    })
+    setNotifSaving(false)
+    toast.success('Einstellungen gespeichert')
+  }, [notifEmailEnabled, notifEmail])
+
+  const handlePushToggle = async () => {
+    if (subscribed || permission === 'granted') {
+      await unsubscribe()
+      toast.success('Push-Benachrichtigungen deaktiviert')
+    } else {
+      const ok = await subscribe()
+      if (ok) toast.success('Push-Benachrichtigungen aktiviert')
+      else if (permission === 'denied') toast.error('Browser hat Benachrichtigungen blockiert — bitte in Browser-Einstellungen erlauben')
+    }
+  }
+
   return (
-    <div
-      className="rounded-lg p-5 space-y-3"
-      style={{ background: 'var(--bg-2)', border: '1px solid var(--border-raw)' }}
-    >
-      <div>
-        <p className="text-sm font-semibold" style={{ color: 'var(--fg-1)' }}>{title}</p>
-        {subtitle && <p className="text-xs mt-0.5" style={{ color: 'var(--fg-3)' }}>{subtitle}</p>}
-      </div>
-      {children}
+    <div className="space-y-6">
+
+      {/* KI-Provider */}
+      <Section title="KI-Provider" subtitle="Eigenen API-Key hinterlegen — NOUS nutzt dann dein Konto statt des Server-Schlüssels.">
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            {(['anthropic', 'openai'] as const).map(p => (
+              <button
+                key={p}
+                onClick={() => setAiProvider(p)}
+                className="flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors"
+                style={{
+                  background: aiProvider === p ? 'var(--brand-blue)' : 'var(--bg-3)',
+                  color: aiProvider === p ? '#fff' : 'var(--fg-3)',
+                  border: `1px solid ${aiProvider === p ? 'var(--brand-blue)' : 'var(--border-raw)'}`,
+                }}
+              >
+                <Bot className="h-3.5 w-3.5" />
+                {p === 'anthropic' ? 'Claude (Anthropic)' : 'GPT-4o (OpenAI)'}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+              {aiProvider === 'anthropic' ? 'Anthropic API-Key' : 'OpenAI API-Key'}
+              {' '}— wird verschlüsselt in deiner DB-Row gespeichert, nur du kannst ihn lesen.
+            </p>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: 'var(--fg-4)' }} />
+                <Input
+                  type="password"
+                  value={aiApiKey}
+                  onChange={e => setAiApiKey(e.target.value)}
+                  placeholder={aiProvider === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
+                  className="pl-9"
+                />
+              </div>
+              <Button
+                onClick={saveAiSettings}
+                disabled={aiSaving}
+                className="h-9 px-4 text-sm font-semibold rounded shrink-0"
+                style={{ background: 'var(--brand-blue)', color: '#fff', border: 'none' }}
+              >
+                {aiSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : aiSaved ? <Check className="h-3.5 w-3.5" /> : 'Speichern'}
+              </Button>
+            </div>
+            {!aiApiKey && (
+              <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+                Kein eigener Key — NOUS nutzt den Server-Schlüssel (Shared Budget).
+              </p>
+            )}
+          </div>
+
+          {aiProvider === 'anthropic' && (
+            <div className="space-y-2">
+              <div className="rounded px-4 py-3 flex items-start gap-3" style={{ background: 'var(--bg-3)', border: '1px solid var(--border-raw)' }}>
+                <Brain className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--brand-blue)' }} />
+                <p className="text-sm" style={{ color: 'var(--fg-3)' }}>
+                  Jede KI-Analyse kostet ca. <span style={{ color: 'var(--fg-1)' }}>$0.002–$0.01</span> — bei normalem Nutzungsverhalten unter <span style={{ color: 'var(--fg-1)' }}>$5/Monat</span>.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Link href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold hover:opacity-80"
+                  style={{ background: 'var(--brand-blue)', color: '#fff' }}>
+                  <ExternalLink className="h-3 w-3" /> Billing öffnen
+                </Link>
+                <Link href="https://console.anthropic.com/settings/usage" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold hover:opacity-80"
+                  style={{ background: 'var(--bg-3)', color: 'var(--fg-2)', border: '1px solid var(--border-raw)' }}>
+                  <ExternalLink className="h-3 w-3" /> API Usage
+                </Link>
+              </div>
+            </div>
+          )}
+          {aiProvider === 'openai' && (
+            <Link href="https://platform.openai.com/usage" target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold hover:opacity-80"
+              style={{ background: 'var(--brand-blue)', color: '#fff' }}>
+              <ExternalLink className="h-3 w-3" /> OpenAI Usage öffnen
+            </Link>
+          )}
+        </div>
+      </Section>
+
+      {/* Notifications */}
+      <Section title="Benachrichtigungen" subtitle="Erinnerungen für Wochenvorbereitung — samstags & sonntags 9:00 Uhr">
+        <div className="space-y-4">
+          {/* Push */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              {(subscribed || permission === 'granted') ? (
+                <Bell className="h-4 w-4" style={{ color: 'var(--long)' }} />
+              ) : (
+                <BellOff className="h-4 w-4" style={{ color: 'var(--fg-4)' }} />
+              )}
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--fg-1)' }}>Browser Push</p>
+                <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+                  {permission === 'denied'
+                    ? 'Vom Browser blockiert — in Browser-Einstellungen erlauben'
+                    : permission === 'unsupported'
+                    ? 'Von diesem Browser nicht unterstützt'
+                    : subscribed || permission === 'granted'
+                    ? 'Aktiv — du erhältst Samstag & Sonntag eine Erinnerung'
+                    : 'Einmalige Browser-Erlaubnis nötig'}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={handlePushToggle}
+              disabled={pushLoading || permission === 'denied' || permission === 'unsupported'}
+              className="h-8 px-3 text-xs font-semibold rounded shrink-0"
+              style={{
+                background: (subscribed || permission === 'granted') ? 'var(--bg-3)' : 'var(--brand-blue)',
+                color: (subscribed || permission === 'granted') ? 'var(--fg-2)' : '#fff',
+                border: (subscribed || permission === 'granted') ? '1px solid var(--border-raw)' : 'none',
+              }}
+            >
+              {pushLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                (subscribed || permission === 'granted') ? 'Deaktivieren' : 'Aktivieren'}
+            </Button>
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--border-raw)' }} />
+
+          {/* Email */}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2.5">
+              <Mail className="h-4 w-4" style={{ color: notifEmailEnabled ? 'var(--brand-blue)' : 'var(--fg-4)' }} />
+              <div className="flex-1">
+                <p className="text-sm font-medium" style={{ color: 'var(--fg-1)' }}>E-Mail Erinnerung</p>
+                <p className="text-xs" style={{ color: 'var(--fg-4)' }}>Benötigt einen konfigurierten Resend-Key (RESEND_API_KEY)</p>
+              </div>
+              <button
+                onClick={() => setNotifEmailEnabled(v => !v)}
+                className="w-10 h-5 rounded-full transition-colors shrink-0 relative"
+                style={{ background: notifEmailEnabled ? 'var(--brand-blue)' : 'var(--bg-4)' }}
+              >
+                <span
+                  className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
+                  style={{ background: '#fff', left: notifEmailEnabled ? '22px' : '2px' }}
+                />
+              </button>
+            </div>
+            {notifEmailEnabled && (
+              <Input
+                type="email"
+                value={notifEmail}
+                onChange={e => setNotifEmail(e.target.value)}
+                placeholder="deine@email.de"
+              />
+            )}
+          </div>
+
+          <Button
+            onClick={saveNotifSettings}
+            disabled={notifSaving}
+            className="h-8 px-3 text-xs font-semibold rounded"
+            style={{ background: 'var(--bg-3)', color: 'var(--fg-1)', border: '1px solid var(--border-raw)' }}
+          >
+            {notifSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+            Speichern
+          </Button>
+        </div>
+      </Section>
     </div>
+  )
+}
+
+// ─── Main page ───────────────────────────────────────────────────────────────
+
+function EinstellungenInner() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const tab = (searchParams.get('tab') ?? 'strategie') as 'strategie' | 'konten' | 'ki'
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', value)
+    router.replace(`/einstellungen?${params.toString()}`, { scroll: false })
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <div className="eyebrow mb-1">Konfiguration</div>
+        <h1
+          className="text-2xl font-bold tracking-tight"
+          style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--fg-1)' }}
+        >
+          Einstellungen
+        </h1>
+      </div>
+
+      <Tabs value={tab} onValueChange={handleTabChange}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="strategie">Strategie</TabsTrigger>
+          <TabsTrigger value="konten">Konten</TabsTrigger>
+          <TabsTrigger value="ki">KI & System</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="strategie">
+          <StrategieTab />
+        </TabsContent>
+
+        <TabsContent value="konten">
+          <KontenTab />
+        </TabsContent>
+
+        <TabsContent value="ki">
+          <KiSystemTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+export default function EinstellungenPage() {
+  return (
+    <Suspense>
+      <EinstellungenInner />
+    </Suspense>
   )
 }

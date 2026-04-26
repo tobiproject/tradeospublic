@@ -23,7 +23,7 @@ export function AccountSwitcher() {
 
   if (!activeAccount) {
     return (
-      <Link href="/accounts">
+      <Link href="/einstellungen?tab=konten">
         <Button variant="outline" size="sm" className="gap-2">
           <Plus className="h-4 w-4" />
           Konto anlegen
@@ -62,7 +62,7 @@ export function AccountSwitcher() {
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/accounts" className="flex items-center gap-2 cursor-pointer">
+          <Link href="/einstellungen?tab=konten" className="flex items-center gap-2 cursor-pointer">
             <Archive className="h-4 w-4" />
             Konten verwalten
           </Link>

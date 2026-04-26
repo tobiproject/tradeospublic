@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import {
@@ -29,15 +30,22 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAccountContext } from '@/contexts/AccountContext'
 import { cn } from '@/lib/utils'
 
-const DEFAULT_NAV_ITEMS = [
+type NavItem =
+  | { id: string; href: string; label: string; icon: React.ElementType; kbd: string | null; tooltip: string; isDivider?: false }
+  | { id: string; isDivider: true; href?: never; label?: never; icon?: never; kbd?: never; tooltip?: never }
+
+const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: 'dashboard',          href: '/dashboard',          label: 'Dashboard',          icon: LayoutDashboard, kbd: 'G D', tooltip: 'Deine wichtigsten KPIs, offene Trades und tägliche Zusammenfassung' },
   { id: 'journal',            href: '/journal',            label: 'Journal',            icon: BookOpen,        kbd: 'G J', tooltip: 'Trades erfassen, bearbeiten und mit KI analysieren lassen' },
   { id: 'performance',        href: '/performance',        label: 'Performance',        icon: TrendingUp,      kbd: 'G P', tooltip: 'Statistiken, Equity-Kurve, Win-Rate und Setup-Auswertung' },
+  { id: 'divider-1',          isDivider: true },
   { id: 'analysen',           href: '/analysen',           label: 'Analysen',           icon: Brain,           kbd: 'G A', tooltip: 'KI-generierte Muster und Verhaltensanalysen aus deinem Journal' },
   { id: 'risk',               href: '/risk',               label: 'Risk',               icon: ShieldCheck,     kbd: 'G R', tooltip: 'Risiko-Regeln, Max-Drawdown, Tageslimit und Prop-Firm-Grenzen' },
+  { id: 'divider-2',          isDivider: true },
   { id: 'wochenvorbereitung', href: '/wochenvorbereitung', label: 'Wochenvorbereitung', icon: Telescope,       kbd: null,  tooltip: 'Ziele für die Woche setzen, Fokus-Assets wählen und Events tracken' },
   { id: 'kalender',           href: '/kalender',           label: 'Kalender',           icon: CalendarDays,    kbd: null,  tooltip: 'Wirtschaftskalender und High-Impact-Events in deiner Zeitzone' },
   { id: 'tagesplan',          href: '/tagesplan',          label: 'Tagesplan',          icon: ClipboardList,   kbd: null,  tooltip: 'Tägliche Routine: Pre-Market Checklist, Fokus-Assets und Tagesnotizen' },
+  { id: 'divider-3',          isDivider: true },
   { id: 'lernmodus',          href: '/lernmodus',          label: 'Lernen',             icon: GraduationCap,   kbd: null,  tooltip: 'Quiz, Chart-Replay und KI-Coach zum Verbessern deiner Entscheidungen' },
   { id: 'watchlist',          href: '/watchlist',          label: 'Watchlist',          icon: Star,            kbd: null,  tooltip: 'Deine gehandelten Assets mit Kontraktwerten für die Risikoberechnung' },
   { id: 'roadmap',            href: '/roadmap',            label: 'Roadmap',            icon: MapIcon,         kbd: null,  tooltip: 'Deine Trader-Journey: Level, Stärken/Schwächen und nächste Schritte' },
@@ -62,21 +70,36 @@ function saveOrder(ids: string[]) {
   } catch {}
 }
 
-function applyOrder(items: typeof DEFAULT_NAV_ITEMS, order: string[]) {
+function applyOrder(items: NavItem[], order: string[]) {
   if (!order.length) return items
   const map = new Map(items.map(i => [i.id, i]))
   const ordered = order.flatMap(id => {
     const item = map.get(id)
     return item ? [item] : []
   })
-  // append any new items not yet in saved order
   const known = new Set(order)
   items.forEach(i => { if (!known.has(i.id)) ordered.push(i) })
   return ordered
 }
 
+function SortableDivider({ id }: { id: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+      className="group flex items-center gap-1 px-2 py-0.5 cursor-grab active:cursor-grabbing"
+      {...attributes}
+      {...listeners}
+    >
+      <div className="flex-1 h-px" style={{ background: 'var(--border-raw)' }} />
+      <GripVertical className="h-2.5 w-2.5 opacity-0 group-hover:opacity-40 transition-opacity shrink-0" style={{ color: 'var(--fg-4)' }} />
+    </div>
+  )
+}
+
 interface NavItemProps {
-  item: typeof DEFAULT_NAV_ITEMS[0]
+  item: Extract<NavItem, { isDivider?: false }>
   isActive: boolean
   hasTodayPlan?: boolean
   showTooltips?: boolean
@@ -140,7 +163,6 @@ function SortableNavItem({ item, isActive, hasTodayPlan, showTooltips }: NavItem
             <item.icon className="h-4 w-4 shrink-0" />
             <span className="flex-1">{item.label}</span>
 
-            {/* Tagesplan completion dot */}
             {showTagesplanDot && (
               <span
                 className="w-1.5 h-1.5 rounded-full shrink-0"
@@ -185,7 +207,6 @@ export function AppSidebar() {
       setHasTodayPlan(!!localStorage.getItem(`nous-morning-${today}`))
     }
     check()
-    // Re-check every 10s so the dot appears immediately after completing the briefing
     const interval = setInterval(check, 10_000)
     return () => clearInterval(interval)
   }, [])
@@ -206,6 +227,9 @@ export function AppSidebar() {
     })
   }, [])
 
+  // suppress unused-var warning — activeAccount used for future features
+  void activeAccount
+
   return (
     <aside
       className="w-56 shrink-0 flex flex-col h-screen sticky top-0"
@@ -216,10 +240,14 @@ export function AppSidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-4 pb-3">
-        <svg width="20" height="20" viewBox="0 0 32 32" fill="none" style={{ color: 'var(--fg-1)' }}>
-          <path d="M6 5 L6 27 L19 27" stroke="currentColor" strokeWidth="3.2" strokeLinecap="square" fill="none"/>
-          <circle cx="25" cy="25" r="3" fill="currentColor"/>
-        </svg>
+        <Image
+          src="/logo/nous-mark-white.svg"
+          alt="NOUS"
+          width={22}
+          height={22}
+          className="shrink-0"
+          priority
+        />
         <span
           className="font-bold text-[15px] tracking-tight"
           style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--fg-1)' }}
@@ -251,6 +279,9 @@ export function AppSidebar() {
               strategy={verticalListSortingStrategy}
             >
               {navItems.map(item => {
+                if (item.isDivider) {
+                  return <SortableDivider key={item.id} id={item.id} />
+                }
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                 return (
                   <SortableNavItem
