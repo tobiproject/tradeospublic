@@ -34,9 +34,14 @@
 | PROJ-17 | Design System (TradingView DNA) | Deployed | — | 2026-04-26 |
 | PROJ-18 | Draggable Sidebar + Tagesplan Indicator | Deployed | — | 2026-04-26 |
 
+| PROJ-19 | Account Type (Futures/CFD/Prop/Eigenhandel) | Deployed | — | 2026-04-26 |
+| PROJ-20 | Absolute Risk Display (€/$) | Deployed | — | 2026-04-26 |
+| PROJ-21 | Personalized Greeting (display_name) | Deployed | — | 2026-04-26 |
+| PROJ-22 | Weekly AI Prep | Deployed | — | 2026-04-26 |
+
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-19
+## Next Available ID: PROJ-23
 
 ## Build Order (Empfohlen)
 
