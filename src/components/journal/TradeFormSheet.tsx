@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { X, Upload, Loader2, TrendingUp, TrendingDown, AlertTriangle, Newspaper, ChevronDown } from 'lucide-react'
+import { X, Upload, Loader2, TrendingUp, TrendingDown, AlertTriangle, Newspaper, ChevronDown, Sparkles, Bell } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 
 import { useTrades, type Trade, type CreateTradeInput } from '@/hooks/useTrades'
+import { addReminder } from '@/components/layout/AnalysisReminderBanner'
 import { useRiskConfig } from '@/hooks/useRiskConfig'
 import { calcRR, calcRiskPercent, calcResultPercent, calcOutcome, validateSLSide } from '@/lib/trade-calculations'
 import { useAccountContext } from '@/contexts/AccountContext'
@@ -425,6 +426,8 @@ export function TradeFormSheet({
 
   const [existingUrls, setExistingUrls] = useState<string[]>([])
   const [newFiles, setNewFiles] = useState<ScreenshotFile[]>([])
+  const [notesRewriting, setNotesRewriting] = useState(false)
+  const [reminderHours, setReminderHours] = useState<string>('none')
 
   const isEdit = !!editingTrade
 
@@ -581,6 +584,14 @@ export function TradeFormSheet({
       }
 
       toast.success('Trade erfasst')
+
+      // Save analysis reminder if set
+      if (reminderHours !== 'none') {
+        const dueAt = new Date(Date.now() + parseInt(reminderHours) * 3600_000).toISOString()
+        addReminder({ tradeId: trade.id, asset: values.asset, direction: values.direction, dueAt })
+        setReminderHours('none')
+      }
+
       // Completion prompts (AC-9.7, AC-9.8)
       const missingNotes = !values.notes
       const missingScreenshot = existingUrls.length === 0 && newFiles.length === 0
@@ -607,6 +618,28 @@ export function TradeFormSheet({
   }
 
   const notes = form.watch('notes') ?? ''
+
+  const rewriteNotes = async () => {
+    if (!notes.trim() || notesRewriting) return
+    setNotesRewriting(true)
+    try {
+      const res = await fetch('/api/ai/rewrite-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes }),
+      })
+      if (res.ok) {
+        const { rewritten } = await res.json()
+        form.setValue('notes', rewritten)
+      } else {
+        toast.error('Rewrite fehlgeschlagen')
+      }
+    } catch {
+      toast.error('Rewrite fehlgeschlagen')
+    } finally {
+      setNotesRewriting(false)
+    }
+  }
 
   const numberField = (name: keyof FormValues, label: string, placeholder: string, allowNegative = false) => (
     <FormField
@@ -904,14 +937,32 @@ export function TradeFormSheet({
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex justify-between">
+                      <FormLabel className="flex justify-between items-center">
                         <span>Notizen</span>
-                        <span className={cn(
-                          'text-xs tabular-nums',
-                          notes.length > 4800 ? 'text-amber-400' : 'text-muted-foreground'
-                        )}>
-                          {notes.length}/5000
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {notes.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={rewriteNotes}
+                              disabled={notesRewriting}
+                              className="flex items-center gap-1 text-xs font-medium transition-colors"
+                              style={{ color: notesRewriting ? 'var(--fg-4)' : 'var(--brand-blue)' }}
+                              title="Notizen mit KI bereinigen (Wispr Flow)"
+                            >
+                              {notesRewriting
+                                ? <Loader2 className="h-3 w-3 animate-spin" />
+                                : <Sparkles className="h-3 w-3" />
+                              }
+                              {notesRewriting ? 'Rewrite…' : 'Rewrite'}
+                            </button>
+                          )}
+                          <span className={cn(
+                            'text-xs tabular-nums',
+                            notes.length > 4800 ? 'text-amber-400' : 'text-muted-foreground'
+                          )}>
+                            {notes.length}/5000
+                          </span>
+                        </div>
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -940,6 +991,36 @@ export function TradeFormSheet({
                     disabled={isMutating}
                   />
                 </div>
+
+                {/* ── Nachanalyse-Erinnerung ─────────── */}
+                {!isEdit && (
+                  <div
+                    className="flex items-center gap-3 rounded px-3 py-2.5"
+                    style={{ background: 'var(--bg-3)', border: '1px solid var(--border-raw)' }}
+                  >
+                    <Bell className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--fg-3)' }} />
+                    <p className="text-xs flex-1" style={{ color: 'var(--fg-2)' }}>
+                      Nachanalyse erinnern in
+                    </p>
+                    <select
+                      value={reminderHours}
+                      onChange={e => setReminderHours(e.target.value)}
+                      className="text-xs rounded px-2 py-1 border-0 outline-none cursor-pointer"
+                      style={{
+                        background: 'var(--bg-1)',
+                        color: 'var(--fg-1)',
+                        border: '1px solid var(--border-raw)',
+                      }}
+                    >
+                      <option value="none">Keine</option>
+                      <option value="1">1 Stunde</option>
+                      <option value="4">4 Stunden</option>
+                      <option value="8">8 Stunden</option>
+                      <option value="24">1 Tag</option>
+                      <option value="48">2 Tage</option>
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 

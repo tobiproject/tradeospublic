@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import {
   LayoutDashboard, BookOpen, TrendingUp, Brain, ShieldCheck,
-  CalendarDays, ClipboardList, GraduationCap, Wallet,
+  CalendarDays, ClipboardList, GraduationCap, Settings,
   LogOut, Plus, GripVertical,
 } from 'lucide-react'
 import {
@@ -35,10 +35,10 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'performance', href: '/performance', label: 'Performance', icon: TrendingUp,      kbd: 'G P' },
   { id: 'analysen',    href: '/analysen',    label: 'Analysen',    icon: Brain,           kbd: 'G A' },
   { id: 'risk',        href: '/risk',        label: 'Risk',        icon: ShieldCheck,     kbd: 'G R' },
-  { id: 'kalender',    href: '/kalender',    label: 'Kalender',    icon: CalendarDays,    kbd: null  },
-  { id: 'tagesplan',   href: '/tagesplan',   label: 'Tagesplan',   icon: ClipboardList,   kbd: null  },
-  { id: 'lernmodus',   href: '/lernmodus',   label: 'Lernen',      icon: GraduationCap,   kbd: null  },
-  { id: 'accounts',    href: '/accounts',    label: 'Konten',      icon: Wallet,          kbd: null  },
+  { id: 'kalender',      href: '/kalender',      label: 'Kalender',    icon: CalendarDays,  kbd: null  },
+  { id: 'tagesplan',    href: '/tagesplan',    label: 'Tagesplan',   icon: ClipboardList, kbd: null  },
+  { id: 'lernmodus',   href: '/lernmodus',    label: 'Lernen',      icon: GraduationCap, kbd: null  },
+  { id: 'einstellungen', href: '/einstellungen', label: 'Einstellungen', icon: Settings,  kbd: null  },
 ]
 
 const STORAGE_KEY = 'tradeos-sidebar-order'

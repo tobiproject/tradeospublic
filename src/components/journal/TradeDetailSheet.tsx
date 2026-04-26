@@ -12,6 +12,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RRSimulator } from '@/components/risk/RRSimulator'
 import { TradeAnalysisTab } from '@/components/ai/TradeAnalysisTab'
+import { TradeSimulationTab } from './TradeSimulationTab'
 import type { Trade } from '@/hooks/useTrades'
 
 const EMOTION_LABELS: Record<string, string> = {
@@ -99,6 +100,7 @@ export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }
             <TabsList className="mx-6 mt-4 mb-0 w-auto self-start">
               <TabsTrigger value="detail">Details</TabsTrigger>
               <TabsTrigger value="ki">KI-Analyse</TabsTrigger>
+              <TabsTrigger value="simulation">Simulation</TabsTrigger>
               <TabsTrigger value="simulator">RR-Simulator</TabsTrigger>
             </TabsList>
 
@@ -223,6 +225,10 @@ export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }
               accountId={trade.account_id}
               isActive={activeTab === 'ki'}
             />
+          </TabsContent>
+
+          <TabsContent value="simulation" className="flex-1 overflow-y-auto px-6 py-4 mt-0">
+            <TradeSimulationTab trade={trade} />
           </TabsContent>
 
           <TabsContent value="simulator" className="flex-1 overflow-y-auto px-6 py-4 mt-0">
