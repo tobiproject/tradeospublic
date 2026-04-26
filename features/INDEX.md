@@ -24,7 +24,7 @@
 | PROJ-8 | Backup & Export | Deployed | [PROJ-8-backup-export.md](PROJ-8-backup-export.md) | 2026-04-23 |
 | PROJ-9 | Automatisierung & Smart Features | Deployed | [PROJ-9-automatisierung.md](PROJ-9-automatisierung.md) | 2026-04-23 |
 | PROJ-10 | Lernmodus (Replay, Quiz, KI-Coach) | Deployed | [PROJ-10-lernmodus.md](PROJ-10-lernmodus.md) | 2026-04-23 |
-| PROJ-11 | Trading Knowledge Base | Planned | [PROJ-11-knowledge-base.md](PROJ-11-knowledge-base.md) | 2026-04-25 |
+| PROJ-11 | Trading Knowledge Base | Deployed | [PROJ-11-knowledge-base.md](PROJ-11-knowledge-base.md) | 2026-04-25 |
 | PROJ-12 | Morning Briefing | Deployed | [PROJ-12-morning-briefing.md](PROJ-12-morning-briefing.md) | 2026-04-26 |
 | PROJ-13 | Notes AI-Rewrite (Wispr Flow) | Deployed | [PROJ-13-notes-ai-rewrite.md](PROJ-13-notes-ai-rewrite.md) | 2026-04-26 |
 | PROJ-14 | Trade Analysis Reminder | Deployed | [PROJ-14-analysis-reminder.md](PROJ-14-analysis-reminder.md) | 2026-04-26 |
@@ -38,11 +38,14 @@
 | PROJ-22 | Weekly AI Prep | Deployed | [PROJ-22-weekly-prep.md](PROJ-22-weekly-prep.md) | 2026-04-26 |
 | PROJ-23 | Watchlist (Asset-Verwaltung) | Deployed | [PROJ-23-watchlist.md](PROJ-23-watchlist.md) | 2026-04-26 |
 | PROJ-24 | TradingView Chart Link | Deployed | [PROJ-24-tradingview-chart-link.md](PROJ-24-tradingview-chart-link.md) | 2026-04-26 |
-| PROJ-25 | Trader Journey & KI-Roadmap | In Progress | [PROJ-25-trader-journey.md](PROJ-25-trader-journey.md) | 2026-04-26 |
+| PROJ-25 | Trader Journey & KI-Roadmap | Deployed | [PROJ-25-trader-journey.md](PROJ-25-trader-journey.md) | 2026-04-26 |
+| PROJ-26 | Weekly Push Notifications | Deployed | [PROJ-26-push-notifications.md](PROJ-26-push-notifications.md) | 2026-04-26 |
+| PROJ-27 | Futures Contract Sizes | Deployed | [PROJ-27-futures-contract-sizes.md](PROJ-27-futures-contract-sizes.md) | 2026-04-26 |
+| PROJ-28 | Trade Milestones & Sidebar Tooltips | Deployed | [PROJ-28-milestones-tooltips.md](PROJ-28-milestones-tooltips.md) | 2026-04-26 |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-26
+## Next Available ID: PROJ-29
 
 ## Build Order (Empfohlen)
 
