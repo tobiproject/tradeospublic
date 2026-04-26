@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   LayoutDashboard, BookOpen, TrendingUp, Brain, ShieldCheck,
   CalendarDays, ClipboardList, GraduationCap, Settings,
-  LogOut, Plus, GripVertical, Star, Map as MapIcon, Telescope,
+  LogOut, Plus, GripVertical, Star, Map as MapIcon, Telescope, BookMarked,
 } from 'lucide-react'
 import {
   DndContext,
@@ -39,7 +39,8 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'tagesplan',          href: '/tagesplan',          label: 'Tagesplan',           icon: ClipboardList, kbd: null },
   { id: 'lernmodus',  href: '/lernmodus',  label: 'Lernen',     icon: GraduationCap, kbd: null },
   { id: 'watchlist',  href: '/watchlist',  label: 'Watchlist',   icon: Star,          kbd: null },
-  { id: 'roadmap',    href: '/roadmap',    label: 'Roadmap',     icon: MapIcon,       kbd: null },
+  { id: 'roadmap',         href: '/roadmap',         label: 'Roadmap',        icon: MapIcon,    kbd: null },
+  { id: 'knowledge-base',  href: '/knowledge-base',  label: 'Knowledge Base',  icon: BookMarked, kbd: null },
 ]
 
 const STORAGE_KEY = 'tradeos-sidebar-order'

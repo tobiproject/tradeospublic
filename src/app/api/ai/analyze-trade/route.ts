@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getAnthropicClient } from '@/lib/anthropic'
 import { TRADE_ANALYSIS_TOOL, buildTradePrompt } from '@/lib/ai-prompts'
+import { getKnowledgeContext } from '@/lib/knowledge-context'
 
 const BodySchema = z.object({
   trade_id: z.string().uuid(),
@@ -63,6 +64,9 @@ async function runAnalysis(
 
     const tradingRules = (rules ?? []).map(r => r.rule_text)
 
+    // Load knowledge base context
+    const knowledgeContext = await getKnowledgeContext(userId)
+
     // Call Claude with retry + exponential backoff
     type AnalysisResult = { score: number; errors: unknown; strengths: unknown; suggestions: unknown; summary: string }
     let lastError: Error | null = null
@@ -79,6 +83,7 @@ async function runAnalysis(
           max_tokens: 1024,
           tools: [TRADE_ANALYSIS_TOOL],
           tool_choice: { type: 'tool', name: 'analyze_trade' },
+          system: knowledgeContext ?? undefined,
           messages: [{ role: 'user', content: buildTradePrompt(trade, accountStats, tradingRules) }],
         })
 

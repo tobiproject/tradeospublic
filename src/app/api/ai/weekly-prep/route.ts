@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { getKnowledgeContext } from '@/lib/knowledge-context'
 
 export async function POST() {
   const supabase = await createServerSupabaseClient()
@@ -34,10 +35,13 @@ export async function POST() {
     ? `\nMeine Strategie: ${strategy.name}\n${strategy.description ?? ''}\nRegeln: ${strategy.rules?.join(', ') ?? '-'}\nTimeframes: ${strategy.preferred_timeframes?.join(', ') ?? '-'}\nInstrumente: ${strategy.instruments?.join(', ') ?? '-'}`
     : ''
 
+  const knowledgeContext = await getKnowledgeContext(user.id)
+
   const client = new Anthropic()
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1500,
+    system: knowledgeContext ?? undefined,
     messages: [{
       role: 'user',
       content: `Du bist ein erfahrener Trading-Coach. Erstelle eine strukturierte Wochenvorbereitung für den Trader basierend auf seinen letzten Trades und seiner Strategie.
