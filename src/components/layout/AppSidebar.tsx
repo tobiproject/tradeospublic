@@ -8,7 +8,9 @@ import {
   LayoutDashboard, BookOpen, TrendingUp, Brain, ShieldCheck,
   CalendarDays, ClipboardList, GraduationCap, Settings,
   LogOut, Plus, GripVertical, Star, Map as MapIcon, Telescope, BookMarked,
+  Users, BookMarked as KbIcon,
 } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   DndContext,
   PointerSensor,
@@ -169,12 +171,6 @@ function SortableNavItem({ item, isActive, hasTodayPlan, showTooltips }: NavItem
                 style={{ background: 'var(--long)' }}
               />
             )}
-
-            {item.kbd && !showTagesplanDot && (
-              <span className="text-[10px] font-mono" style={{ color: 'var(--fg-4)' }}>
-                {item.kbd}
-              </span>
-            )}
           </Link>
         </TooltipTrigger>
         {showTooltips && item.tooltip && (
@@ -243,17 +239,19 @@ export function AppSidebar() {
         <Image
           src="/logo/nous-mark-white.svg"
           alt="NOUS"
-          width={22}
-          height={22}
+          width={20}
+          height={20}
           className="shrink-0"
           priority
         />
-        <span
-          className="font-bold text-[15px] tracking-tight"
-          style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--fg-1)' }}
-        >
-          NOUS
-        </span>
+        <Image
+          src="/logo/nous-wordmark-white.svg"
+          alt="NOUS"
+          width={58}
+          height={14}
+          className="shrink-0"
+          priority
+        />
       </div>
 
       {/* Log trade CTA */}
@@ -307,22 +305,51 @@ export function AppSidebar() {
           <AccountSwitcher />
         </div>
         <div className="flex items-center gap-1">
-          <Link
-            href="/einstellungen"
-            className="flex flex-1 items-center gap-2.5 px-2.5 py-1.5 rounded text-[13px] transition-colors duration-100"
-            style={{ color: 'var(--fg-3)', background: 'transparent' }}
-            onMouseEnter={e => {
-              ;(e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'
-              ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-1)'
-            }}
-            onMouseLeave={e => {
-              ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-              ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-3)'
-            }}
-          >
-            <Settings className="h-4 w-4 shrink-0" />
-            Einstellungen
-          </Link>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                title="Einstellungen"
+                className="flex items-center justify-center w-8 h-8 rounded transition-colors duration-100 shrink-0"
+                style={{ color: 'var(--fg-3)', background: 'transparent' }}
+                onMouseEnter={e => {
+                  ;(e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'
+                  ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-1)'
+                }}
+                onMouseLeave={e => {
+                  ;(e.currentTarget as HTMLElement).style.background = 'transparent'
+                  ;(e.currentTarget as HTMLElement).style.color = 'var(--fg-3)'
+                }}
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="start" className="w-52 p-1.5">
+              <Link
+                href="/einstellungen"
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded text-[13px] transition-colors hover:bg-accent"
+                style={{ color: 'var(--fg-2)' }}
+              >
+                <Settings className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--fg-4)' }} />
+                Einstellungen
+              </Link>
+              <Link
+                href="/einstellungen?tab=konten"
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded text-[13px] transition-colors hover:bg-accent"
+                style={{ color: 'var(--fg-2)' }}
+              >
+                <Users className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--fg-4)' }} />
+                Konten verwalten
+              </Link>
+              <Link
+                href="/knowledge-base"
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded text-[13px] transition-colors hover:bg-accent"
+                style={{ color: 'var(--fg-2)' }}
+              >
+                <KbIcon className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--fg-4)' }} />
+                Knowledge Base
+              </Link>
+            </PopoverContent>
+          </Popover>
           <button
             onClick={logout}
             title="Abmelden"

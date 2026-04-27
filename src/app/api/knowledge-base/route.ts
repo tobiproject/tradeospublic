@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
+async function extractPdfText(buffer: Buffer): Promise<string> {
+  // pdf-parse is in serverExternalPackages — loaded natively, not bundled
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require('pdf-parse')
+  const result = await pdfParse(buffer)
+  return result.text?.trim() ?? ''
+}
+
 export async function GET() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -56,15 +64,12 @@ export async function POST(req: NextRequest) {
 
   // Extract text from PDF
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require('pdf-parse')
-    const parsed = await pdfParse(Buffer.from(bytes))
-    const text = parsed.text?.trim() ?? ''
+    const text = await extractPdfText(Buffer.from(bytes))
 
     if (!text) {
       await supabase.from('knowledge_documents').update({
         status: 'error',
-        error_message: 'Dieses PDF enthält keinen lesbaren Text (möglicherweise gescannt)',
+        error_message: 'Dieses PDF enthält keinen lesbaren Text (möglicherweise gescannt oder passwortgeschützt). Bitte Tab "Text einfügen" verwenden.',
       }).eq('id', doc.id)
       return NextResponse.json({ document: { ...doc, status: 'error' } })
     }
@@ -75,10 +80,11 @@ export async function POST(req: NextRequest) {
     }).eq('id', doc.id)
 
     return NextResponse.json({ document: { id: doc.id, name: file.name, file_size: file.size, status: 'ready' } })
-  } catch {
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
     await supabase.from('knowledge_documents').update({
       status: 'error',
-      error_message: 'PDF konnte nicht gelesen werden (möglicherweise passwortgeschützt)',
+      error_message: `PDF-Parsing fehlgeschlagen: ${msg.slice(0, 200)}`,
     }).eq('id', doc.id)
     return NextResponse.json({ document: { id: doc.id, status: 'error' } })
   }

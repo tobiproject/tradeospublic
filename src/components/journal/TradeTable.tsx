@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { ChevronUp, ChevronDown, ChevronsUpDown, Image, TrendingUp, TrendingDown, Newspaper } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, Image, TrendingUp, TrendingDown, Newspaper, CheckCircle2 } from 'lucide-react'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -143,6 +143,9 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
               <TableHead className="hidden sm:table-cell text-center w-8">
                 <Newspaper className="h-3.5 w-3.5 inline-block" />
               </TableHead>
+              <TableHead className="hidden sm:table-cell text-center w-8" title="Nachbereitung">
+                <CheckCircle2 className="h-3.5 w-3.5 inline-block" />
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -231,6 +234,13 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
                       >
                         <Newspaper className="h-3.5 w-3.5" />
                       </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-center" title={trade.what_went_well ? 'Nachbereitung abgeschlossen' : 'Nachbereitung ausstehend'}>
+                    {trade.what_went_well ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 inline-block text-emerald-400" />
+                    ) : (
+                      <span className="inline-block w-3.5 h-3.5 rounded-full border border-border/40" />
                     )}
                   </TableCell>
                 </TableRow>
