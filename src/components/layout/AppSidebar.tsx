@@ -51,7 +51,6 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: 'lernmodus',          href: '/lernmodus',          label: 'Lernen',             icon: GraduationCap,   kbd: null,  tooltip: 'Quiz, Chart-Replay und KI-Coach zum Verbessern deiner Entscheidungen' },
   { id: 'watchlist',          href: '/watchlist',          label: 'Watchlist',          icon: Star,            kbd: null,  tooltip: 'Deine gehandelten Assets mit Kontraktwerten für die Risikoberechnung' },
   { id: 'roadmap',            href: '/roadmap',            label: 'Roadmap',            icon: MapIcon,         kbd: null,  tooltip: 'Deine Trader-Journey: Level, Stärken/Schwächen und nächste Schritte' },
-  { id: 'knowledge-base',     href: '/knowledge-base',     label: 'Knowledge Base',     icon: BookMarked,      kbd: null,  tooltip: 'Deine Trading-Strategie als Wissensbasis für personalisierte KI-Ratschläge' },
 ]
 
 const STORAGE_KEY = 'nous-sidebar-order'

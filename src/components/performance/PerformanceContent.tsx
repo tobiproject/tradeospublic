@@ -18,6 +18,7 @@ import { TradeHeatmap } from './TradeHeatmap'
 import { DrawdownChart } from './DrawdownChart'
 import { DrawdownPhaseTable } from './DrawdownPhaseTable'
 import { NewsAnalyseTab } from './NewsAnalyseTab'
+import { StandaloneRRSimulator } from './StandaloneRRSimulator'
 
 // ─── URL serialisation ────────────────────────────────────────────────────────
 
@@ -136,46 +137,54 @@ export function PerformanceContent() {
       ) : null}
 
       {/* Tabs */}
-      {!isLoading && stats && stats.kpi.totalTrades > 0 && (
-        <Tabs defaultValue="overview">
-          <TabsList className="mb-4">
-            <TabsTrigger value="overview">Übersicht</TabsTrigger>
-            <TabsTrigger value="winrate">Winrate</TabsTrigger>
-            <TabsTrigger value="heatmap">Heatmap</TabsTrigger>
-            <TabsTrigger value="drawdown">Drawdown</TabsTrigger>
-            <TabsTrigger value="news">News-Analyse</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue={!isLoading && stats && stats.kpi.totalTrades > 0 ? "overview" : "simulator"}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Übersicht</TabsTrigger>
+          <TabsTrigger value="winrate">Winrate</TabsTrigger>
+          <TabsTrigger value="heatmap">Heatmap</TabsTrigger>
+          <TabsTrigger value="drawdown">Drawdown</TabsTrigger>
+          <TabsTrigger value="news">News-Analyse</TabsTrigger>
+          <TabsTrigger value="simulator">RR-Simulator</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="overview" className="space-y-4 mt-0">
-            <MonthlyPnlChart data={stats.monthly} />
-            <WeeklyPnlChart data={stats.weekly} />
-            <DayOfWeekChart data={stats.dayOfWeek} />
-          </TabsContent>
+        {!isLoading && stats && stats.kpi.totalTrades > 0 ? (
+          <>
+            <TabsContent value="overview" className="space-y-4 mt-0">
+              <MonthlyPnlChart data={stats.monthly} />
+              <WeeklyPnlChart data={stats.weekly} />
+              <DayOfWeekChart data={stats.dayOfWeek} />
+            </TabsContent>
 
-          <TabsContent value="winrate" className="mt-0">
-            <WinrateCharts
-              byAsset={stats.winrateByAsset}
-              bySetup={stats.winrateBySetup}
-              byStrategy={stats.winrateByStrategy}
-            />
-          </TabsContent>
+            <TabsContent value="winrate" className="mt-0">
+              <WinrateCharts
+                byAsset={stats.winrateByAsset}
+                bySetup={stats.winrateBySetup}
+                byStrategy={stats.winrateByStrategy}
+              />
+            </TabsContent>
 
-          <TabsContent value="heatmap" className="mt-0">
-            <TradeHeatmap cells={stats.heatmap} />
-          </TabsContent>
+            <TabsContent value="heatmap" className="mt-0">
+              <TradeHeatmap cells={stats.heatmap} />
+            </TabsContent>
 
-          <TabsContent value="drawdown" className="space-y-4 mt-0">
-            <DrawdownChart
-              data={stats.drawdownCurve}
-              currentDrawdown={stats.currentDrawdownPct}
-            />
-            <DrawdownPhaseTable phases={stats.drawdownPhases} />
-          </TabsContent>
-          <TabsContent value="news" className="mt-0">
-            <NewsAnalyseTab />
-          </TabsContent>
-        </Tabs>
-      )}
+            <TabsContent value="drawdown" className="space-y-4 mt-0">
+              <DrawdownChart
+                data={stats.drawdownCurve}
+                currentDrawdown={stats.currentDrawdownPct}
+              />
+              <DrawdownPhaseTable phases={stats.drawdownPhases} />
+            </TabsContent>
+
+            <TabsContent value="news" className="mt-0">
+              <NewsAnalyseTab />
+            </TabsContent>
+          </>
+        ) : null}
+
+        <TabsContent value="simulator" className="mt-0">
+          <StandaloneRRSimulator />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

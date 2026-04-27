@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { ChevronUp, ChevronDown, ChevronsUpDown, Image, TrendingUp, TrendingDown, Newspaper, CheckCircle2 } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, ImageIcon, TrendingUp, TrendingDown, Newspaper, CheckCircle2, X } from 'lucide-react'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import {
   Pagination,
   PaginationContent,
@@ -55,6 +56,8 @@ const EMOTION_ICONS: Record<string, string> = {
 export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('traded_at')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [lightboxUrls, setLightboxUrls] = useState<string[] | null>(null)
+  const [lightboxIdx, setLightboxIdx] = useState(0)
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -119,8 +122,8 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
         {tradesPage.total > tradesPage.pageSize && ` · Seite ${currentPage} von ${totalPages}`}
       </div>
 
-      <div className="rounded-lg border border-border/60 overflow-hidden">
-        <Table>
+      <div className="rounded-lg border border-border/60 overflow-x-auto">
+        <Table className="min-w-full">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-border/60">
               <SortHead colKey="traded_at" label="Datum" />
@@ -137,13 +140,13 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
               <TableHead className="hidden xl:table-cell">Strategie</TableHead>
               <TableHead className="hidden md:table-cell text-center">Emotion</TableHead>
               <TableHead className="text-center">Ergebnis</TableHead>
-              <TableHead className="hidden sm:table-cell text-center w-8">
-                <Image className="h-3.5 w-3.5 inline-block" />
+              <TableHead className="text-center w-8" title="Screenshot">
+                <ImageIcon className="h-3.5 w-3.5 inline-block" />
               </TableHead>
-              <TableHead className="hidden sm:table-cell text-center w-8">
+              <TableHead className="hidden sm:table-cell text-center w-8" title="News-Event">
                 <Newspaper className="h-3.5 w-3.5 inline-block" />
               </TableHead>
-              <TableHead className="hidden sm:table-cell text-center w-8" title="Nachbereitung">
+              <TableHead className="hidden sm:table-cell text-center w-8" title="Nachbereitung abgeschlossen">
                 <CheckCircle2 className="h-3.5 w-3.5 inline-block" />
               </TableHead>
             </TableRow>
@@ -215,10 +218,27 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
                   <TableCell className="text-center">
                     <OutcomeBadge outcome={trade.outcome} />
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell text-center">
-                    {(trade.screenshot_urls?.length ?? 0) > 0 && (
-                      <span className="inline-flex items-center justify-center text-muted-foreground">
-                        <Image className="h-3.5 w-3.5" />
+                  <TableCell
+                    className="text-center"
+                    onClick={e => {
+                      if ((trade.screenshot_urls?.length ?? 0) > 0) {
+                        e.stopPropagation()
+                        setLightboxUrls(trade.screenshot_urls)
+                        setLightboxIdx(0)
+                      }
+                    }}
+                  >
+                    {(trade.screenshot_urls?.length ?? 0) > 0 ? (
+                      <span
+                        className="inline-flex items-center justify-center rounded p-0.5 transition-colors hover:bg-muted cursor-pointer"
+                        title="Screenshot anzeigen"
+                        style={{ color: 'var(--brand-blue)' }}
+                      >
+                        <ImageIcon className="h-3.5 w-3.5" />
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center justify-center opacity-20">
+                        <ImageIcon className="h-3.5 w-3.5" />
                       </span>
                     )}
                   </TableCell>
@@ -249,6 +269,40 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
           </TableBody>
         </Table>
       </div>
+
+      {/* Screenshot Lightbox */}
+      <Dialog open={!!lightboxUrls} onOpenChange={open => { if (!open) setLightboxUrls(null) }}>
+        <DialogContent className="max-w-5xl p-0 bg-black border-border/60 [&>button]:hidden">
+          <div className="relative">
+            {lightboxUrls && (
+              <>
+                <img
+                  src={lightboxUrls[lightboxIdx]}
+                  alt="Screenshot"
+                  className="w-full h-auto max-h-[88vh] object-contain"
+                />
+                {lightboxUrls.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                    {lightboxUrls.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setLightboxIdx(i)}
+                        className={cn('w-2 h-2 rounded-full transition-colors', i === lightboxIdx ? 'bg-white' : 'bg-white/40')}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+            <button
+              onClick={() => setLightboxUrls(null)}
+              className="absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Pagination */}
       {totalPages > 1 && (
