@@ -388,6 +388,7 @@ function KiSystemTab() {
   const [aiSaved, setAiSaved] = useState(false)
   const [notifEmail, setNotifEmail] = useState('')
   const [notifEmailEnabled, setNotifEmailEnabled] = useState(false)
+  const [propFirmReminderEnabled, setPropFirmReminderEnabled] = useState(false)
   const [notifSaving, setNotifSaving] = useState(false)
   const { permission, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications()
 
@@ -399,6 +400,7 @@ function KiSystemTab() {
     fetch('/api/notifications/settings').then(r => r.json()).then(d => {
       setNotifEmailEnabled(d.email_enabled ?? false)
       setNotifEmail(d.email_address ?? '')
+      setPropFirmReminderEnabled(d.prop_firm_reminder_enabled ?? false)
     })
   }, [])
 
@@ -419,11 +421,15 @@ function KiSystemTab() {
     await fetch('/api/notifications/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email_enabled: notifEmailEnabled, email_address: notifEmail }),
+      body: JSON.stringify({
+        email_enabled: notifEmailEnabled,
+        email_address: notifEmail,
+        prop_firm_reminder_enabled: propFirmReminderEnabled,
+      }),
     })
     setNotifSaving(false)
     toast.success('Einstellungen gespeichert')
-  }, [notifEmailEnabled, notifEmail])
+  }, [notifEmailEnabled, notifEmail, propFirmReminderEnabled])
 
   const handlePushToggle = async () => {
     if (subscribed || permission === 'granted') {
@@ -562,6 +568,37 @@ function KiSystemTab() {
                 (subscribed || permission === 'granted') ? 'Deaktivieren' : 'Aktivieren'}
             </Button>
           </div>
+
+          <div style={{ borderTop: '1px solid var(--border-raw)' }} />
+
+          {/* Prop-Firm Regelwerk Erinnerung */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Bell className="h-4 w-4" style={{ color: propFirmReminderEnabled ? 'var(--brand-blue)' : 'var(--fg-4)' }} />
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--fg-1)' }}>Prop-Firm Regelwerk</p>
+                <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+                  Mo–Fr um 09:00 Uhr — deine Regeln als Push-Erinnerung vor dem Trading
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setPropFirmReminderEnabled(v => !v)}
+              disabled={!(subscribed || permission === 'granted')}
+              className="w-10 h-5 rounded-full transition-colors shrink-0 relative disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: propFirmReminderEnabled ? 'var(--brand-blue)' : 'var(--bg-4)' }}
+            >
+              <span
+                className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
+                style={{ background: '#fff', left: propFirmReminderEnabled ? '22px' : '2px' }}
+              />
+            </button>
+          </div>
+          {propFirmReminderEnabled && !(subscribed || permission === 'granted') && (
+            <p className="text-xs" style={{ color: 'var(--fg-4)' }}>
+              Browser Push muss erst aktiviert sein.
+            </p>
+          )}
 
           <div style={{ borderTop: '1px solid var(--border-raw)' }} />
 
