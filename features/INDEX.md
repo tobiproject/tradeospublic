@@ -14,11 +14,11 @@
 
 | ID | Feature | Status | Spec | Created |
 |----|---------|--------|------|---------|
-| PROJ-1 | Auth & Multi-Account System | Approved | [PROJ-1-auth-multi-account.md](PROJ-1-auth-multi-account.md) | 2026-04-23 |
-| PROJ-2 | Dashboard (Zentrale Übersicht) | Approved | [PROJ-2-dashboard.md](PROJ-2-dashboard.md) | 2026-04-23 |
-| PROJ-3 | Trading Journal (Core) | Approved | [PROJ-3-trading-journal.md](PROJ-3-trading-journal.md) | 2026-04-23 |
+| PROJ-1 | Auth & Multi-Account System | Deployed | [PROJ-1-auth-multi-account.md](PROJ-1-auth-multi-account.md) | 2026-04-23 |
+| PROJ-2 | Dashboard (Zentrale Übersicht) | Deployed | [PROJ-2-dashboard.md](PROJ-2-dashboard.md) | 2026-04-23 |
+| PROJ-3 | Trading Journal (Core) | Deployed | [PROJ-3-trading-journal.md](PROJ-3-trading-journal.md) | 2026-04-23 |
 | PROJ-4 | KI-Analyse Engine | Deployed | [PROJ-4-ki-analyse.md](PROJ-4-ki-analyse.md) | 2026-04-23 |
-| PROJ-5 | Risk Management System | Approved | [PROJ-5-risk-management.md](PROJ-5-risk-management.md) | 2026-04-23 |
+| PROJ-5 | Risk Management System | Deployed | [PROJ-5-risk-management.md](PROJ-5-risk-management.md) | 2026-04-23 |
 | PROJ-6 | Performance & Statistik | Deployed | [PROJ-6-performance-statistik.md](PROJ-6-performance-statistik.md) | 2026-04-23 |
 | PROJ-7 | News-Integration & Analyse | Deployed | [PROJ-7-news-integration.md](PROJ-7-news-integration.md) | 2026-04-23 |
 | PROJ-8 | Backup & Export | Deployed | [PROJ-8-backup-export.md](PROJ-8-backup-export.md) | 2026-04-23 |
