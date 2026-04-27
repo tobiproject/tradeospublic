@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { X, Upload, Loader2, TrendingUp, TrendingDown, AlertTriangle, Newspaper, ChevronDown, Sparkles, Bell } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form'
@@ -689,11 +689,15 @@ export function TradeFormSheet({
   )
 
   return (
-    <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent side="right" className="sm:max-w-[580px] flex flex-col p-0 gap-0">
-        <SheetHeader className="px-6 py-4 border-b border-border/60">
-          <SheetTitle>{isEdit ? 'Trade bearbeiten' : 'Neuer Trade'}</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl w-full p-0 gap-0 flex flex-col max-h-[90vh] [&>button:last-child]:hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 shrink-0">
+          <span className="font-semibold text-base">{isEdit ? 'Trade bearbeiten' : 'Neuer Trade'}</span>
+          <Button variant="ghost" size="icon" onClick={handleClose} className="h-8 w-8">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
@@ -1078,7 +1082,7 @@ export function TradeFormSheet({
             </div>
 
             {/* ── Footer ────────────────────────────── */}
-            <SheetFooter className="px-6 py-4 border-t border-border/60 gap-2">
+            <div className="px-6 py-4 border-t border-border/60 flex gap-2 shrink-0">
               <Button type="button" variant="outline" onClick={handleClose} disabled={isMutating} className="flex-1">
                 Abbrechen
               </Button>
@@ -1086,10 +1090,10 @@ export function TradeFormSheet({
                 {isMutating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {isEdit ? 'Speichern' : 'Erfassen'}
               </Button>
-            </SheetFooter>
+            </div>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
