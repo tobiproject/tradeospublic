@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-0)' }}>
         <AppSidebar />
         <main className="flex-1 overflow-y-auto">
-          <div className="px-6 py-5 max-w-[1280px]">
+          <div className="px-6 py-5 w-full">
             {children}
           </div>
         </main>

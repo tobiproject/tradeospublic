@@ -266,10 +266,18 @@ export function TradeDetailSheet({ trade, open, onOpenChange, onEdit, onDelete }
 
       {/* Screenshot lightbox */}
       <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
-        <DialogContent className="max-w-5xl p-2 bg-black border-border/60">
-          {lightboxUrl && (
-            <img src={lightboxUrl} alt="Screenshot" className="w-full h-auto max-h-[85vh] object-contain rounded" />
-          )}
+        <DialogContent className="max-w-5xl p-0 bg-black border-border/60 [&>button]:hidden">
+          <div className="relative">
+            {lightboxUrl && (
+              <img src={lightboxUrl} alt="Screenshot" className="w-full h-auto max-h-[88vh] object-contain" />
+            )}
+            <button
+              onClick={() => setLightboxUrl(null)}
+              className="absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

@@ -122,8 +122,8 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
         {tradesPage.total > tradesPage.pageSize && ` · Seite ${currentPage} von ${totalPages}`}
       </div>
 
-      <div className="rounded-lg border border-border/60 overflow-x-auto">
-        <Table className="w-full">
+      <div className="rounded-lg border border-border/60 overflow-hidden">
+        <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-border/60">
               <SortHead colKey="traded_at" label="Datum" />
@@ -164,10 +164,10 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
                   className="cursor-pointer border-border/40 hover:bg-muted/30 transition-colors"
                   onClick={() => onRowClick(trade)}
                 >
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                  <TableCell className="text-xs text-muted-foreground">
                     {format(parseISO(trade.traded_at), 'dd.MM.yy HH:mm')}
                   </TableCell>
-                  <TableCell className="font-medium">{trade.asset}</TableCell>
+                  <TableCell className="font-medium truncate max-w-0">{trade.asset}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={cn(
                       'text-xs px-1.5 py-0 gap-0.5',
