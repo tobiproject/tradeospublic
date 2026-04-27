@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { AssetMultiPicker } from '@/components/watchlist/AssetMultiPicker'
 import { WeeklyPrepCard } from '@/components/dashboard/WeeklyPrepCard'
-import { format, startOfWeek } from 'date-fns'
+import { format, startOfWeek, addWeeks, addDays, getISOWeek } from 'date-fns'
 import { de } from 'date-fns/locale'
 
 interface WeeklyPlan {
@@ -20,8 +20,24 @@ interface WeeklyPlan {
 
 const EMPTY: WeeklyPlan = { focus_assets: [], weekly_goals: [], max_trades: null, max_drawdown: null, notes: '' }
 
+function getTargetWeekMonday(): Date {
+  const today = new Date()
+  const dow = today.getDay() // 0=Sun, 6=Sat
+  const thisMonday = startOfWeek(today, { weekStartsOn: 1 })
+  // On Saturday or Sunday, plan for next week
+  return (dow === 6 || dow === 0) ? addWeeks(thisMonday, 1) : thisMonday
+}
+
 function getWeekStart() {
-  return format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd')
+  return format(getTargetWeekMonday(), 'yyyy-MM-dd')
+}
+
+function buildWeekLabel(monday: Date): string {
+  const friday = addDays(monday, 4)
+  const kw = getISOWeek(monday)
+  const moStr = format(monday, 'dd.MM.', { locale: de })
+  const frStr = format(friday, 'dd.MM.yyyy', { locale: de })
+  return `KW ${kw} · Mo ${moStr} – Fr ${frStr}`
 }
 
 export default function WochenvorbereitungPage() {
@@ -31,12 +47,14 @@ export default function WochenvorbereitungPage() {
   const [saved, setSaved] = useState(false)
   const [newGoal, setNewGoal] = useState('')
 
-  const weekStart = getWeekStart()
-  const weekLabel = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "'KW' w — EEEE, d. MMMM yyyy", { locale: de })
+  const targetMonday = getTargetWeekMonday()
+  const weekStart = format(targetMonday, 'yyyy-MM-dd')
+  const weekLabel = buildWeekLabel(targetMonday)
+  const isNextWeek = new Date().getDay() === 6 || new Date().getDay() === 0
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await fetch(`/api/weekly-plan?week=${weekStart}`)
+    const res = await fetch(`/api/weekly-plan?week=${format(targetMonday, 'yyyy-MM-dd')}`)
     const data = await res.json()
     if (data.plan) {
       setPlan({
@@ -48,7 +66,7 @@ export default function WochenvorbereitungPage() {
       })
     }
     setLoading(false)
-  }, [weekStart])
+  }, [targetMonday])
 
   useEffect(() => { load() }, [load])
 
@@ -80,9 +98,16 @@ export default function WochenvorbereitungPage() {
       <div className="flex items-end justify-between">
         <div>
           <div className="eyebrow mb-1">Planung</div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--fg-1)' }}>
-            Wochenvorbereitung
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--fg-1)' }}>
+              Wochenvorbereitung
+            </h1>
+            {isNextWeek && (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'var(--brand-blue)', color: '#fff' }}>
+                Nächste Woche
+              </span>
+            )}
+          </div>
           <p className="text-sm mt-0.5" style={{ color: 'var(--fg-3)' }}>{weekLabel}</p>
         </div>
         <Button

@@ -8,7 +8,7 @@ import {
   LayoutDashboard, BookOpen, TrendingUp, Brain, ShieldCheck,
   CalendarDays, ClipboardList, GraduationCap, Settings,
   LogOut, Plus, GripVertical, Star, Map as MapIcon, Telescope, BookMarked,
-  Users, BookMarked as KbIcon,
+  Users, BookMarked as KbIcon, Info,
 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -346,6 +346,15 @@ export function AppSidebar() {
               >
                 <KbIcon className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--fg-4)' }} />
                 Knowledge Base
+              </Link>
+              <div className="my-0.5 h-px" style={{ background: 'var(--border-raw)' }} />
+              <Link
+                href="/about"
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded text-[13px] transition-colors hover:bg-accent"
+                style={{ color: 'var(--fg-2)' }}
+              >
+                <Info className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--fg-4)' }} />
+                Über NOUS
               </Link>
             </PopoverContent>
           </Popover>
