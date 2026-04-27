@@ -123,31 +123,31 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
       </div>
 
       <div className="rounded-lg border border-border/60 overflow-x-auto">
-        <Table className="min-w-full">
+        <Table className="w-full">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-border/60">
               <SortHead colKey="traded_at" label="Datum" />
               <SortHead colKey="asset" label="Asset" />
               <TableHead>Richtung</TableHead>
-              <TableHead className="hidden md:table-cell text-right">Entry</TableHead>
-              <TableHead className="hidden lg:table-cell text-right">SL</TableHead>
-              <TableHead className="hidden lg:table-cell text-right">TP</TableHead>
-              <TableHead className="hidden md:table-cell text-right">Lots</TableHead>
-              <SortHead colKey="result_currency" label="Ergebnis €" className="text-right hidden sm:table-cell" />
               <SortHead colKey="result_percent" label="%" className="text-right" />
-              <SortHead colKey="rr_ratio" label="RR" className="text-right hidden md:table-cell" />
-              <TableHead className="hidden lg:table-cell">Setup</TableHead>
-              <TableHead className="hidden xl:table-cell">Strategie</TableHead>
-              <TableHead className="hidden md:table-cell text-center">Emotion</TableHead>
+              <SortHead colKey="result_currency" label="€" className="text-right hidden sm:table-cell" />
               <TableHead className="text-center">Ergebnis</TableHead>
               <TableHead className="text-center w-8" title="Screenshot">
                 <ImageIcon className="h-3.5 w-3.5 inline-block" />
               </TableHead>
+              <TableHead className="text-center w-8" title="Nachbereitung abgeschlossen">
+                <CheckCircle2 className="h-3.5 w-3.5 inline-block" />
+              </TableHead>
+              <SortHead colKey="rr_ratio" label="RR" className="text-right hidden md:table-cell" />
+              <TableHead className="hidden md:table-cell text-right">Entry</TableHead>
+              <TableHead className="hidden md:table-cell text-right">Lots</TableHead>
+              <TableHead className="hidden lg:table-cell text-right">SL</TableHead>
+              <TableHead className="hidden lg:table-cell text-right">TP</TableHead>
+              <TableHead className="hidden lg:table-cell">Setup</TableHead>
+              <TableHead className="hidden xl:table-cell">Strategie</TableHead>
+              <TableHead className="hidden md:table-cell text-center">Emotion</TableHead>
               <TableHead className="hidden sm:table-cell text-center w-8" title="News-Event">
                 <Newspaper className="h-3.5 w-3.5 inline-block" />
-              </TableHead>
-              <TableHead className="hidden sm:table-cell text-center w-8" title="Nachbereitung abgeschlossen">
-                <CheckCircle2 className="h-3.5 w-3.5 inline-block" />
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -181,45 +181,21 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
                       {trade.direction === 'long' ? 'L' : 'S'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-right tabular-nums text-xs">
-                    {trade.entry_price}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-right tabular-nums text-xs text-muted-foreground">
-                    {trade.sl_price}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-right tabular-nums text-xs text-muted-foreground">
-                    {trade.tp_price}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-right tabular-nums text-xs">
-                    {trade.lot_size}
+                  <TableCell className={cn('text-right tabular-nums text-sm font-medium', resultColor)}>
+                    {trade.result_percent !== null
+                      ? `${trade.result_percent >= 0 ? '+' : ''}${trade.result_percent.toFixed(2)}%`
+                      : '–'}
                   </TableCell>
                   <TableCell className={cn('hidden sm:table-cell text-right tabular-nums text-sm font-medium', resultColor)}>
                     {trade.result_currency !== null
                       ? `${trade.result_currency >= 0 ? '+' : ''}${trade.result_currency.toFixed(2)}`
                       : '–'}
                   </TableCell>
-                  <TableCell className={cn('text-right tabular-nums text-sm font-medium', resultColor)}>
-                    {trade.result_percent !== null
-                      ? `${trade.result_percent >= 0 ? '+' : ''}${trade.result_percent.toFixed(2)}%`
-                      : '–'}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-right tabular-nums text-xs">
-                    {trade.rr_ratio !== null ? `1:${trade.rr_ratio}` : '–'}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-xs text-muted-foreground max-w-[120px] truncate">
-                    {trade.setup_type ?? '–'}
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell text-xs text-muted-foreground max-w-[120px] truncate">
-                    {trade.strategy ?? '–'}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-center text-base" title={trade.emotion_before ?? ''}>
-                    {emotionIcon ?? '–'}
-                  </TableCell>
                   <TableCell className="text-center">
                     <OutcomeBadge outcome={trade.outcome} />
                   </TableCell>
                   <TableCell
-                    className="text-center"
+                    className="text-center w-8"
                     onClick={e => {
                       if ((trade.screenshot_urls?.length ?? 0) > 0) {
                         e.stopPropagation()
@@ -242,6 +218,37 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
                       </span>
                     )}
                   </TableCell>
+                  <TableCell className="text-center w-8" title={trade.what_went_well ? 'Nachbereitung abgeschlossen' : 'Nachbereitung ausstehend'}>
+                    {trade.what_went_well ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 inline-block text-emerald-400" />
+                    ) : (
+                      <span className="inline-block w-3.5 h-3.5 rounded-full border border-border/40" />
+                    )}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-right tabular-nums text-xs">
+                    {trade.rr_ratio !== null ? `1:${trade.rr_ratio}` : '–'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-right tabular-nums text-xs">
+                    {trade.entry_price}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-right tabular-nums text-xs">
+                    {trade.lot_size}
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-right tabular-nums text-xs text-muted-foreground">
+                    {trade.sl_price}
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-right tabular-nums text-xs text-muted-foreground">
+                    {trade.tp_price}
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-xs text-muted-foreground max-w-[120px] truncate">
+                    {trade.setup_type ?? '–'}
+                  </TableCell>
+                  <TableCell className="hidden xl:table-cell text-xs text-muted-foreground max-w-[120px] truncate">
+                    {trade.strategy ?? '–'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-center text-base" title={trade.emotion_before ?? ''}>
+                    {emotionIcon ?? '–'}
+                  </TableCell>
                   <TableCell className="hidden sm:table-cell text-center">
                     {trade.news_event_present === true && (
                       <span
@@ -254,13 +261,6 @@ export function TradeTable({ tradesPage, isLoading, onRowClick, onPageChange }: 
                       >
                         <Newspaper className="h-3.5 w-3.5" />
                       </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell text-center" title={trade.what_went_well ? 'Nachbereitung abgeschlossen' : 'Nachbereitung ausstehend'}>
-                    {trade.what_went_well ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 inline-block text-emerald-400" />
-                    ) : (
-                      <span className="inline-block w-3.5 h-3.5 rounded-full border border-border/40" />
                     )}
                   </TableCell>
                 </TableRow>
